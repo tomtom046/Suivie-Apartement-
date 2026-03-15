@@ -14,38 +14,18 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Google Identity Services pour l'API Gmail -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <!-- FullCalendar pour la vue calendrier (Amélioration 18) -->
+    <!-- FullCalendar pour la vue calendrier -->
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
     
     <style>
-        /* Styles spécifiques pour le rendu PDF */
-        #pdf-workspace {
-            display: none; 
-            background: white;
-        }
-        .quittance-page {
-            width: 100%;
-            padding: 40px;
-            font-family: 'Arial', sans-serif;
-            color: #333;
-            box-sizing: border-box;
-            page-break-after: always;
-        }
-        .quittance-page:last-child {
-            page-break-after: auto;
-        }
-        /* Cache la scrollbar globale mais permet le scroll */
+        #pdf-workspace { display: none; background: white; }
+        .quittance-page { width: 100%; padding: 40px; font-family: 'Arial', sans-serif; color: #333; box-sizing: border-box; page-break-after: always; }
+        .quittance-page:last-child { page-break-after: auto; }
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        
-        .tab-btn.active {
-            background-color: #2563eb; /* blue-600 */
-            color: white;
-        }
-        
-        /* Personnalisation mineure FullCalendar */
+        .tab-btn.active { background-color: #2563eb; color: white; }
         .fc-event { cursor: pointer; }
         .fc-toolbar-title { font-size: 1.25rem !important; color: #1e293b; }
     </style>
@@ -68,7 +48,6 @@
             <button onclick="switchTab('dashboard')" id="nav-dashboard" class="tab-btn active flex items-center gap-3 w-full text-left px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">
                 <i class="fa-solid fa-chart-pie w-5 text-center"></i> Tableau de bord
             </button>
-            <!-- NOUVEAU : Onglet Calendrier -->
             <button onclick="switchTab('calendrier')" id="nav-calendrier" class="tab-btn flex items-center gap-3 w-full text-left px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">
                 <i class="fa-solid fa-calendar-days w-5 text-center"></i> Calendrier
             </button>
@@ -98,7 +77,6 @@
         <div id="tab-dashboard" class="tab-content block space-y-6 max-w-6xl mx-auto">
             <h2 class="text-2xl font-bold text-slate-800 mb-6 border-b pb-2">Vue d'ensemble</h2>
             
-            <!-- Cartes de statistiques -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-100 flex items-center gap-4">
                     <div class="bg-green-100 text-green-600 p-4 rounded-lg"><i class="fa-solid fa-arrow-down-up-lock text-xl"></i></div>
@@ -140,19 +118,15 @@
                 <div class="lg:col-span-1 bg-white rounded-xl shadow-sm border border-slate-100 p-6 flex flex-col">
                     <h3 class="text-lg font-semibold mb-4 text-slate-800">Indicateurs & Rentabilité</h3>
                     <div class="space-y-3 flex-1 flex flex-col justify-center">
-                        
-                        <!-- NOUVEAU : Cashflow (Amélioration 12) -->
                         <div class="p-3 bg-purple-50 rounded-lg border border-purple-100">
                             <p class="text-xs text-purple-700 font-medium uppercase tracking-wide">Cashflow Mensuel Estimé</p>
                             <p class="text-2xl font-bold text-purple-900" id="stat-cashflow">0.00 €</p>
                             <p class="text-[10px] text-purple-600 mt-1">Loyer + Charges - Mensualité crédit</p>
                         </div>
-
                         <div class="p-3 bg-blue-50 rounded-lg border border-blue-100">
                             <p class="text-xs text-blue-700 font-medium uppercase tracking-wide">Rentabilité Brute</p>
                             <p class="text-2xl font-bold text-blue-900" id="stat-renta-brute">0.00 %</p>
                         </div>
-
                         <div class="p-3 bg-green-50 rounded-lg border border-green-100">
                             <p class="text-xs text-green-700 font-medium uppercase tracking-wide">Rentabilité Nette (Année)</p>
                             <p class="text-2xl font-bold text-green-900" id="stat-renta-nette">0.00 %</p>
@@ -161,7 +135,6 @@
                 </div>
             </div>
 
-            <!-- Dernières transactions -->
             <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 mt-6">
                 <h3 class="text-lg font-semibold mb-4 text-slate-800">Dernières opérations</h3>
                 <div class="overflow-x-auto">
@@ -182,7 +155,7 @@
             </div>
         </div>
 
-        <!-- NOUVEAU TAB : CALENDRIER (Amélioration 18) -->
+        <!-- TAB CALENDRIER -->
         <div id="tab-calendrier" class="tab-content hidden max-w-6xl mx-auto h-full flex-col">
             <h2 class="text-2xl font-bold text-slate-800 mb-6 border-b pb-2 flex-shrink-0">Calendrier des Opérations</h2>
             <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 flex-1 min-h-[500px]">
@@ -190,7 +163,7 @@
             </div>
         </div>
 
-        <!-- TAB 2 : BAIL & LOCATAIRE -->
+        <!-- TAB BAIL & LOCATAIRE -->
         <div id="tab-locataire" class="tab-content hidden space-y-6 max-w-4xl mx-auto">
             <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
                 <h2 class="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2 border-b pb-2">
@@ -200,39 +173,32 @@
                 <form id="settings-form" class="space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         
-                        <!-- Bailleur -->
                         <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
                             <h3 class="font-bold text-slate-700 mb-3"><i class="fa-solid fa-user-tie mr-2"></i>Le Bailleur (Vous)</h3>
                             <input type="text" id="bailleur_nom" placeholder="Nom et Prénom" class="w-full p-2 border border-slate-300 rounded-md mb-3 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-slate-200" disabled>
                             <textarea id="bailleur_adresse" placeholder="Votre adresse complète" class="w-full p-2 border border-slate-300 rounded-md h-20 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-slate-200" disabled></textarea>
                             
-                            <!-- MISE EN VALEUR : Prix d'achat -->
                             <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                                 <label class="block text-sm font-bold text-blue-800 mb-1"><i class="fa-solid fa-tag"></i> Prix d'achat du bien (€)</label>
                                 <input type="number" id="prix_achat" step="0.01" placeholder="Ex: 150000" class="w-full p-2 border border-blue-300 rounded-md focus:ring-2 focus:ring-blue-500 disabled:bg-slate-200" disabled>
                             </div>
-
-                            <!-- MISE EN VALEUR : Crédit Immo -->
                             <div class="mt-3 p-3 bg-purple-50 border border-purple-200 rounded-lg">
                                 <label class="block text-sm font-bold text-purple-800 mb-1"><i class="fa-solid fa-building-columns"></i> Mensualité crédit immobilier (€)</label>
                                 <input type="number" id="credit_mensualite" step="0.01" placeholder="Ex: 650" class="w-full p-2 border border-purple-300 rounded-md focus:ring-2 focus:ring-purple-500 disabled:bg-slate-200" disabled>
                             </div>
                         </div>
 
-                        <!-- Locataire -->
                         <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
                             <h3 class="font-bold text-slate-700 mb-3"><i class="fa-solid fa-user mr-2"></i>Le Locataire</h3>
                             <input type="text" id="locataire_nom" placeholder="Nom et Prénom du locataire" class="w-full p-2 border border-slate-300 rounded-md mb-3 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-slate-200" disabled>
                             <input type="email" id="locataire_email" placeholder="Adresse Email (ex: jean@mail.com)" class="w-full p-2 border border-slate-300 rounded-md mb-3 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-slate-200" disabled>
                             <textarea id="logement_adresse" placeholder="Adresse du logement loué" class="w-full p-2 border border-slate-300 rounded-md h-20 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-slate-200" disabled></textarea>
                             
-                            <!-- MISE EN VALEUR : Caution -->
                             <div class="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
                                 <label class="block text-sm font-bold text-orange-800 mb-1"><i class="fa-solid fa-lock"></i> Dépôt de garantie versé (Caution €)</label>
                                 <input type="number" id="caution" step="0.01" class="w-full p-2 border border-orange-300 rounded-md focus:ring-2 focus:ring-orange-500 disabled:bg-slate-200" disabled>
                             </div>
                         </div>
-
                     </div>
 
                     <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
@@ -263,7 +229,6 @@
                         </div>
                     </div>
 
-                    <!-- Configuration Gmail API -->
                     <div class="bg-red-50 p-4 rounded-lg border border-red-200">
                         <h3 class="font-bold text-red-800 mb-2 flex items-center gap-2"><i class="fa-brands fa-google"></i> Envoi direct par Gmail (API)</h3>
                         <p class="text-sm text-red-600 mb-2">Pour envoyer les emails en arrière-plan, ajoutez votre ID Client Google Cloud. Vous devrez autoriser l'application une fois.</p>
@@ -278,7 +243,6 @@
                         </button>
                     </div>
 
-                    <!-- Actions Rapides Communication -->
                     <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
                         <div>
                             <h3 class="font-bold text-blue-800 mb-1"><i class="fa-solid fa-paper-plane mr-2"></i>Communication</h3>
@@ -303,26 +267,23 @@
             <h2 class="text-2xl font-bold text-slate-800 mb-6 border-b pb-2">Suivi Financier</h2>
             
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Formulaire d'ajout -->
+                <!-- Formulaire d'ajout/modification -->
                 <div class="lg:col-span-1">
                     <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 sticky top-6">
                         
-                        <button type="button" onclick="autoGenerateLoyer()" class="w-full mb-6 bg-green-100 text-green-700 hover:bg-green-200 font-bold py-3 rounded-lg transition flex justify-center items-center gap-2 border border-green-300 shadow-sm">
+                        <button type="button" id="btn-auto-loyer" onclick="autoGenerateLoyer()" class="w-full mb-6 bg-green-100 text-green-700 hover:bg-green-200 font-bold py-3 rounded-lg transition flex justify-center items-center gap-2 border border-green-300 shadow-sm">
                             <i class="fa-solid fa-bolt"></i> Encaisser le loyer du mois
                         </button>
 
-                        <h3 class="font-bold text-slate-800 mb-4 border-t pt-4">Saisir une opération manuelle</h3>
+                        <h3 class="font-bold text-slate-800 mb-4 border-t pt-4" id="form-trans-title">Saisir une opération manuelle</h3>
                         <form id="transaction-form" class="space-y-4">
+                            <input type="hidden" id="trans_id" value="">
                             <div>
                                 <label class="block text-sm text-slate-600 mb-1">Type d'opération</label>
                                 <select id="trans_type" required class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 bg-white" onchange="toggleCustomType()">
-                                    <option value="loyer">Loyer perçu (Locataire)</option>
-                                    <option value="charge">Charge récupérable (ex: Eau, TEOM)</option>
-                                    <option value="depense">Dépense proprio (Assurance, frais)</option>
-                                    <option value="travaux">Travaux / Entretien</option>
-                                    <option value="autre">Autre (Personnalisé)...</option>
+                                    <!-- Options injectées par JS -->
                                 </select>
-                                <input type="text" id="trans_type_custom" placeholder="Nom de la catégorie..." class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 mt-2 hidden bg-slate-50">
+                                <input type="text" id="trans_type_custom" placeholder="Nom de la nouvelle catégorie..." class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 mt-2 hidden bg-slate-50">
                             </div>
                             <div>
                                 <label class="block text-sm text-slate-600 mb-1">Date</label>
@@ -336,9 +297,27 @@
                                 <label class="block text-sm text-slate-600 mb-1">Description</label>
                                 <input type="text" id="trans_desc" placeholder="Ex: Loyer de Mars, Fuite robinet..." required class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500">
                             </div>
-                            <button type="submit" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 rounded-lg transition flex justify-center items-center gap-2 shadow-sm">
-                                <i class="fa-solid fa-plus"></i> Ajouter
-                            </button>
+
+                            <!-- Récurrence (Seulement lors d'un ajout) -->
+                            <div id="recurrence_section" class="pt-3 border-t border-slate-100">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <input type="checkbox" id="trans_recurrence" onchange="document.getElementById('recurrence_months_container').classList.toggle('hidden', !this.checked)" class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                                    <label for="trans_recurrence" class="text-sm font-medium text-slate-700">Répéter tous les mois</label>
+                                </div>
+                                <div id="recurrence_months_container" class="hidden">
+                                    <label class="block text-xs text-slate-500 mb-1">Pendant combien de mois ? (1 à 120)</label>
+                                    <input type="number" id="trans_recurrence_months" value="12" min="1" max="120" class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 text-sm">
+                                </div>
+                            </div>
+
+                            <div class="flex gap-2 pt-2">
+                                <button type="button" id="btn-cancel-edit" onclick="cancelEditTransaction()" class="hidden w-1/3 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 rounded-lg transition text-sm">
+                                    Annuler
+                                </button>
+                                <button type="submit" id="btn-submit-trans" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 rounded-lg transition flex justify-center items-center gap-2 shadow-sm">
+                                    <i class="fa-solid fa-plus"></i> Ajouter
+                                </button>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -350,8 +329,7 @@
                             <h3 class="font-bold text-slate-800">Historique complet</h3>
                             
                             <div class="flex gap-2">
-                                <!-- Export JSON complet (Amélioration 20) -->
-                                <button onclick="exportJSON()" class="text-sm bg-purple-50 border border-purple-200 hover:bg-purple-100 text-purple-700 py-1.5 px-3 rounded-lg flex items-center gap-2 transition" title="Sauvegarde complète de votre base de données">
+                                <button onclick="exportJSON()" class="text-sm bg-purple-50 border border-purple-200 hover:bg-purple-100 text-purple-700 py-1.5 px-3 rounded-lg flex items-center gap-2 transition" title="Sauvegarde complète">
                                     <i class="fa-solid fa-file-code"></i> Sauvegarde JSON
                                 </button>
                                 <button onclick="exportCSV()" class="text-sm bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-700 py-1.5 px-3 rounded-lg flex items-center gap-2 transition">
@@ -365,8 +343,9 @@
                                     <tr class="text-slate-500 text-sm uppercase tracking-wider">
                                         <th class="p-3">Date</th>
                                         <th class="p-3">Opération</th>
+                                        <th class="p-3">Description</th>
                                         <th class="p-3 text-right">Montant</th>
-                                        <th class="p-3 text-center">Action</th>
+                                        <th class="p-3 text-center">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="full-transactions-list" class="text-sm divide-y divide-slate-100">
@@ -466,9 +445,7 @@
             </div>
             <p class="text-slate-700 mb-4 font-medium" id="modal-text">Êtes-vous sûr de vouloir envoyer cet email ?</p>
             
-            <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 text-sm text-slate-600 mb-6 max-h-48 overflow-y-auto" id="modal-preview">
-                <!-- Aperçu du mail injecté ici -->
-            </div>
+            <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 text-sm text-slate-600 mb-6 max-h-48 overflow-y-auto" id="modal-preview"></div>
             
             <div class="flex justify-end gap-3">
                 <button id="modal-cancel" class="px-5 py-2.5 text-slate-600 hover:bg-slate-100 font-medium rounded-lg transition">Annuler</button>
@@ -480,11 +457,10 @@
     </div>
 
     <script type="module">
-        // Importations Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, addDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, addDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // VOS IDENTIFIANTS FIREBASE
         const firebaseConfig = {
@@ -505,7 +481,6 @@
         let appSettings = {}; 
         let gmailToken = null; 
 
-        // Mis à jour avec credit_mensualite
         const fields = [
             'bailleur_nom', 'bailleur_adresse', 'locataire_nom', 'locataire_email',
             'logement_adresse', 'loyer_base', 'loyer_charges', 'lieu_emission',
@@ -515,9 +490,8 @@
         let financeChartInstance = null; 
         let calendarInstance = null;
 
-        // --- Logique de la modale de confirmation ---
+        // Modale de sécurité
         let currentConfirmAction = null;
-
         window.showConfirmModal = function(title, text, preview, onConfirm) {
             document.getElementById('modal-title').innerText = title;
             document.getElementById('modal-text').innerHTML = text;
@@ -525,12 +499,10 @@
             currentConfirmAction = onConfirm;
             document.getElementById('email-confirm-modal').classList.remove('hidden');
         };
-
         window.closeConfirmModal = function() {
             document.getElementById('email-confirm-modal').classList.add('hidden');
             currentConfirmAction = null;
         };
-
         document.getElementById('modal-cancel').addEventListener('click', closeConfirmModal);
         document.getElementById('modal-confirm').addEventListener('click', () => {
             if (currentConfirmAction) currentConfirmAction();
@@ -545,39 +517,27 @@
         document.getElementById('trans_date').valueAsDate = new Date();
         document.getElementById('reg_year').value = now.getFullYear();
 
-        // FIX BUG AFFICHAGE : Utilisation correcte du toggling de classe pour Tailwind
         window.switchTab = function(tabId) {
-            // On cache tout proprement en supprimant les propriétés d'affichage qui pourraient faire conflit
             document.querySelectorAll('.tab-content').forEach(el => {
                 el.classList.add('hidden');
                 el.classList.remove('flex', 'block');
             });
-            
             document.querySelectorAll('.tab-btn').forEach(el => {
                 el.classList.remove('active', 'bg-blue-600', 'text-white');
                 el.classList.add('text-slate-300');
             });
             
-            // On affiche uniquement l'onglet ciblé avec son bon type d'affichage
             const targetTab = document.getElementById('tab-' + tabId);
             targetTab.classList.remove('hidden');
-            
-            if (tabId === 'calendrier') {
-                targetTab.classList.add('flex'); // Le calendrier a besoin de 'flex'
-            } else {
-                targetTab.classList.add('block'); // Les autres ont besoin de 'block'
-            }
+            if (tabId === 'calendrier') targetTab.classList.add('flex');
+            else targetTab.classList.add('block');
             
             const btn = document.getElementById('nav-' + tabId);
             btn.classList.add('active', 'bg-blue-600', 'text-white');
             btn.classList.remove('text-slate-300');
             
             if(tabId === 'regularisation') calculateRegularization();
-            if(tabId === 'calendrier') {
-                setTimeout(() => {
-                    initOrUpdateCalendar();
-                }, 50);
-            }
+            if(tabId === 'calendrier') setTimeout(initOrUpdateCalendar, 50);
         };
 
         try {
@@ -586,15 +546,12 @@
             auth = getAuth(app);
             db = getFirestore(app);
         } catch (error) {
-            console.error("Erreur d'initialisation Firebase:", error);
+            console.error("Erreur Firebase:", error);
             showToast("Erreur de configuration Cloud", true);
         }
 
         const initAuth = async () => {
-            try {
-                await signInAnonymously(auth);
-            } catch (error) {
-                console.error("Erreur d'authentification:", error);
+            try { await signInAnonymously(auth); } catch (e) {
                 document.getElementById('connection-status').innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-500"></i> Erreur`;
             }
         };
@@ -615,148 +572,232 @@
             });
         }
 
+        // --- GESTION CATÉGORIES (Améliorations) ---
+        const defaultCategories = [
+            { value: 'loyer', label: 'Loyer perçu (Locataire)' },
+            { value: 'charge', label: 'Charge récupérable (ex: Eau, TEOM)' },
+            { value: 'charge_immo', label: 'Charge Immobilière globale' },
+            { value: 'taxe_fonciere', label: 'Taxe foncière' },
+            { value: 'csg', label: 'CSG' },
+            { value: 'depense', label: 'Dépense proprio (Assurance, frais)' },
+            { value: 'travaux', label: 'Travaux / Entretien' }
+        ];
+
+        function renderCategories() {
+            const select = document.getElementById('trans_type');
+            const currentValue = select.value;
+            select.innerHTML = '';
+            
+            defaultCategories.forEach(cat => select.add(new Option(cat.label, cat.value)));
+
+            if (appSettings.custom_categories && Array.isArray(appSettings.custom_categories)) {
+                appSettings.custom_categories.forEach(cat => select.add(new Option(cat, cat)));
+            }
+            select.add(new Option('Autre (Nouvelle catégorie)...', 'autre'));
+
+            if(Array.from(select.options).some(opt => opt.value === currentValue)) select.value = currentValue;
+            else select.value = 'loyer';
+        }
+
         function enableForm() {
             fields.forEach(field => {
                 const el = document.getElementById(field);
-                if(el) {
-                    el.disabled = false;
-                    el.classList.remove('disabled:bg-slate-200');
-                }
+                if(el) { el.disabled = false; el.classList.remove('disabled:bg-slate-200'); }
             });
             document.getElementById('signature_file').disabled = false;
-            
-            document.getElementById('btn-save').disabled = false;
-            document.getElementById('btn-save').classList.remove('opacity-50', 'cursor-not-allowed');
-
-            document.getElementById('btn-generate').disabled = false;
-            document.getElementById('btn-generate').classList.remove('opacity-50', 'cursor-not-allowed');
-
-            document.getElementById('btn-generate-email').disabled = false;
-            document.getElementById('btn-generate-email').classList.remove('opacity-50', 'cursor-not-allowed');
+            ['btn-save', 'btn-generate', 'btn-generate-email'].forEach(id => {
+                const btn = document.getElementById(id);
+                if(btn) { btn.disabled = false; btn.classList.remove('opacity-50', 'cursor-not-allowed'); }
+            });
         }
 
         async function loadDataFromCloud() {
             if (!currentUser) return;
-            try {
-                const docRef = doc(db, 'artifacts', appIdentifier, 'users', currentUser.uid, 'settings', 'profile');
-                const docSnap = await getDoc(docRef);
-                
-                if (docSnap.exists()) {
-                    appSettings = docSnap.data();
-                    fields.forEach(field => {
-                        if (appSettings[field] !== undefined && document.getElementById(field)) {
-                            document.getElementById(field).value = appSettings[field];
-                        }
-                    });
-
-                    if (appSettings.signature_data) {
-                        currentSignatureData = appSettings.signature_data;
-                        showSignaturePreview(currentSignatureData);
+            const docSnap = await getDoc(doc(db, 'artifacts', appIdentifier, 'users', currentUser.uid, 'settings', 'profile'));
+            if (docSnap.exists()) {
+                appSettings = docSnap.data();
+                fields.forEach(field => {
+                    if (appSettings[field] !== undefined && document.getElementById(field)) {
+                        document.getElementById(field).value = appSettings[field];
                     }
+                });
+                if (appSettings.signature_data) {
+                    currentSignatureData = appSettings.signature_data;
+                    showSignaturePreview(currentSignatureData);
                 }
-            } catch (error) {
-                console.error("Erreur de chargement profil:", error);
             }
+            renderCategories();
         }
 
-        async function saveDataToCloud() {
+        async function saveDataToCloud(silent = false) {
             if (!currentUser) return;
             const btnSave = document.getElementById('btn-save');
             const originalContent = btnSave.innerHTML;
-            btnSave.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Sauvegarde...`;
-            btnSave.disabled = true;
+            if(!silent) { btnSave.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Sauvegarde...`; btnSave.disabled = true; }
 
             fields.forEach(field => {
-                if(document.getElementById(field)) {
-                    appSettings[field] = document.getElementById(field).value;
-                }
+                if(document.getElementById(field)) appSettings[field] = document.getElementById(field).value;
             });
             appSettings.signature_data = currentSignatureData;
-            
-            appSettings.loyer_base = parseFloat(appSettings.loyer_base) || 0;
-            appSettings.loyer_charges = parseFloat(appSettings.loyer_charges) || 0;
-            appSettings.caution = parseFloat(appSettings.caution) || 0;
-            appSettings.prix_achat = parseFloat(appSettings.prix_achat) || 0;
-            appSettings.credit_mensualite = parseFloat(appSettings.credit_mensualite) || 0;
+            ['loyer_base', 'loyer_charges', 'caution', 'prix_achat', 'credit_mensualite'].forEach(f => {
+                appSettings[f] = parseFloat(appSettings[f]) || 0;
+            });
 
             try {
-                const docRef = doc(db, 'artifacts', appIdentifier, 'users', currentUser.uid, 'settings', 'profile');
-                await setDoc(docRef, appSettings);
-                showToast("Dossier sauvegardé !");
-                updateDashboard();
+                await setDoc(doc(db, 'artifacts', appIdentifier, 'users', currentUser.uid, 'settings', 'profile'), appSettings);
+                if(!silent) { showToast("Dossier sauvegardé !"); updateDashboard(); }
             } catch (error) {
-                console.error("Erreur sauvegarde:", error);
-                showToast("Erreur sauvegarde profil", true);
+                if(!silent) showToast("Erreur sauvegarde profil", true);
             } finally {
-                btnSave.innerHTML = originalContent;
-                btnSave.disabled = false;
+                if(!silent) { btnSave.innerHTML = originalContent; btnSave.disabled = false; }
             }
         }
+        document.getElementById('btn-save').addEventListener('click', () => saveDataToCloud(false));
 
-        document.getElementById('btn-save').addEventListener('click', saveDataToCloud);
-
-        // --- GESTION FINANCES ---
+        // --- GESTION FINANCES (Transactions, Edit, Duplicate, Récurrence) ---
         function setupTransactionsListener() {
             if (!currentUser) return;
             const transRef = collection(db, 'artifacts', appIdentifier, 'users', currentUser.uid, 'transactions');
-            
             unsubscribeTransactions = onSnapshot(transRef, (snapshot) => {
                 allTransactions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 allTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
-                
                 updateDashboard();
                 renderTransactionsTable();
-                
-                // Mettre à jour les autres vues si elles sont actives
-                if(!document.getElementById('tab-regularisation').classList.contains('hidden')) {
-                    calculateRegularization();
-                }
-                if(!document.getElementById('tab-calendrier').classList.contains('hidden')) {
-                    initOrUpdateCalendar();
-                }
-            }, (error) => {
-                console.error("Erreur snapshot transactions:", error);
+                if(!document.getElementById('tab-regularisation').classList.contains('hidden')) calculateRegularization();
+                if(!document.getElementById('tab-calendrier').classList.contains('hidden')) initOrUpdateCalendar();
             });
         }
 
         window.toggleCustomType = function() {
             const select = document.getElementById('trans_type');
             const customInput = document.getElementById('trans_type_custom');
-            if(select.value === 'autre') {
-                customInput.classList.remove('hidden');
-                customInput.required = true;
-            } else {
-                customInput.classList.add('hidden');
-                customInput.required = false;
-            }
+            if(select.value === 'autre') { customInput.classList.remove('hidden'); customInput.required = true; } 
+            else { customInput.classList.add('hidden'); customInput.required = false; }
         }
+
+        window.editTransaction = function(id) {
+            const t = allTransactions.find(x => x.id === id);
+            if(!t) return;
+            document.getElementById('trans_id').value = t.id;
+            document.getElementById('trans_date').value = t.date;
+            document.getElementById('trans_amount').value = t.amount;
+            document.getElementById('trans_desc').value = t.desc;
+
+            const select = document.getElementById('trans_type');
+            if(Array.from(select.options).some(opt => opt.value === t.type)) { select.value = t.type; toggleCustomType(); } 
+            else { select.value = 'autre'; document.getElementById('trans_type_custom').value = t.type; toggleCustomType(); }
+
+            document.getElementById('recurrence_section').classList.add('hidden'); // Pas de récurrence en édition
+            document.getElementById('form-trans-title').innerText = "Modifier l'opération";
+            
+            const btnSubmit = document.getElementById('btn-submit-trans');
+            btnSubmit.innerHTML = '<i class="fa-solid fa-pen"></i> Mettre à jour';
+            btnSubmit.classList.replace('bg-slate-800', 'bg-blue-600');
+            btnSubmit.classList.replace('hover:bg-slate-900', 'hover:bg-blue-700');
+            document.getElementById('btn-cancel-edit').classList.remove('hidden');
+            document.getElementById('btn-auto-loyer').classList.add('hidden');
+            
+            document.getElementById('transaction-form').scrollIntoView({behavior: 'smooth'});
+        };
+
+        window.cancelEditTransaction = function() {
+            document.getElementById('transaction-form').reset();
+            document.getElementById('trans_id').value = '';
+            document.getElementById('trans_date').valueAsDate = new Date();
+            toggleCustomType();
+            
+            document.getElementById('recurrence_section').classList.remove('hidden');
+            document.getElementById('recurrence_months_container').classList.add('hidden');
+            document.getElementById('form-trans-title').innerText = "Saisir une opération manuelle";
+
+            const btnSubmit = document.getElementById('btn-submit-trans');
+            btnSubmit.innerHTML = '<i class="fa-solid fa-plus"></i> Ajouter';
+            btnSubmit.classList.replace('bg-blue-600', 'bg-slate-800');
+            btnSubmit.classList.replace('hover:bg-blue-700', 'hover:bg-slate-900');
+            document.getElementById('btn-cancel-edit').classList.add('hidden');
+            document.getElementById('btn-auto-loyer').classList.remove('hidden');
+        };
+
+        window.duplicateTransaction = function(id) {
+            const t = allTransactions.find(x => x.id === id);
+            if(!t) return;
+            cancelEditTransaction();
+            document.getElementById('trans_amount').value = t.amount;
+            document.getElementById('trans_desc').value = t.desc + " (Copie)";
+            
+            const select = document.getElementById('trans_type');
+            if(Array.from(select.options).some(opt => opt.value === t.type)) { select.value = t.type; toggleCustomType(); } 
+            else { select.value = 'autre'; document.getElementById('trans_type_custom').value = t.type; toggleCustomType(); }
+            
+            document.getElementById('transaction-form').scrollIntoView({behavior: 'smooth'});
+            showToast("Opération chargée. Modifiez si besoin et cliquez sur Ajouter.");
+        };
 
         document.getElementById('transaction-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             if (!currentUser) return;
 
             let finalType = document.getElementById('trans_type').value;
+            let customTypeVal = document.getElementById('trans_type_custom').value.trim();
+            
             if (finalType === 'autre') {
-                finalType = document.getElementById('trans_type_custom').value || 'Autre';
+                if (!customTypeVal) { showToast("Veuillez saisir un nom pour la catégorie.", true); return; }
+                finalType = capitalize(customTypeVal);
+                if (!appSettings.custom_categories) appSettings.custom_categories = [];
+                if (!appSettings.custom_categories.includes(finalType)) {
+                    appSettings.custom_categories.push(finalType);
+                    await saveDataToCloud(true);
+                    renderCategories();
+                    document.getElementById('trans_type').value = finalType;
+                }
             }
 
-            const newTrans = {
-                type: finalType,
-                date: document.getElementById('trans_date').value,
-                amount: parseFloat(document.getElementById('trans_amount').value),
-                desc: document.getElementById('trans_desc').value,
-                timestamp: new Date().toISOString()
-            };
+            const amount = parseFloat(document.getElementById('trans_amount').value);
+            const desc = document.getElementById('trans_desc').value;
+            const startDateStr = document.getElementById('trans_date').value;
+            const isRecurrent = document.getElementById('trans_recurrence').checked;
+            const recurrenceMonths = parseInt(document.getElementById('trans_recurrence_months').value) || 1;
+            const transId = document.getElementById('trans_id').value;
+
+            const btn = document.getElementById('btn-submit-trans');
+            const originalBtnHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Traitement...';
+            btn.disabled = true;
 
             try {
-                await addDoc(collection(db, 'artifacts', appIdentifier, 'users', currentUser.uid, 'transactions'), newTrans);
-                showToast("Opération ajoutée");
-                e.target.reset();
-                document.getElementById('trans_date').valueAsDate = new Date();
-                toggleCustomType();
+                if (transId) {
+                    await updateDoc(doc(db, 'artifacts', appIdentifier, 'users', currentUser.uid, 'transactions', transId), {
+                        type: finalType, date: startDateStr, amount: amount, desc: desc, timestamp: new Date().toISOString()
+                    });
+                    showToast("Opération modifiée avec succès.");
+                    cancelEditTransaction();
+                } else {
+                    let numIterations = isRecurrent ? recurrenceMonths : 1;
+                    let startDate = new Date(startDateStr);
+                    const promises = [];
+
+                    for(let i=0; i<numIterations; i++) {
+                        let iterDate = new Date(startDate);
+                        iterDate.setMonth(startDate.getMonth() + i);
+                        if (iterDate.getDate() !== startDate.getDate()) iterDate.setDate(0); // Gestion fin de mois (ex 31 janv + 1 mois)
+
+                        promises.push(addDoc(collection(db, 'artifacts', appIdentifier, 'users', currentUser.uid, 'transactions'), {
+                            type: finalType,
+                            date: iterDate.toISOString().split('T')[0],
+                            amount: amount,
+                            desc: desc + (numIterations > 1 ? ` (${i+1}/${numIterations})` : ''),
+                            timestamp: new Date().toISOString()
+                        }));
+                    }
+                    await Promise.all(promises);
+                    showToast(numIterations > 1 ? `${numIterations} opérations générées avec succès !` : "Opération ajoutée.");
+                    cancelEditTransaction(); // Resets form correctly
+                }
             } catch (error) {
-                console.error("Erreur ajout transaction:", error);
-                showToast("Erreur d'ajout", true);
+                showToast("Erreur lors de l'opération", true);
+            } finally {
+                btn.innerHTML = originalBtnHtml;
+                btn.disabled = false;
             }
         });
 
@@ -765,88 +806,47 @@
             try {
                 await deleteDoc(doc(db, 'artifacts', appIdentifier, 'users', currentUser.uid, 'transactions', id));
                 showToast("Opération supprimée");
-            } catch (error) {
-                console.error("Erreur suppression:", error);
-                showToast("Erreur suppression", true);
-            }
+            } catch (error) { showToast("Erreur suppression", true); }
         };
 
         window.autoGenerateLoyer = async function() {
             if (!currentUser) return;
+            const loyerTotal = (parseFloat(document.getElementById('loyer_base').value) || 0) + (parseFloat(document.getElementById('loyer_charges').value) || 0);
+            if(loyerTotal === 0) { showToast("Configurez d'abord le loyer dans 'Bail'.", true); return; }
             
-            const loyerBase = parseFloat(document.getElementById('loyer_base').value) || 0;
-            const loyerCharges = parseFloat(document.getElementById('loyer_charges').value) || 0;
-            const loyerTotal = loyerBase + loyerCharges;
-            
-            if(loyerTotal === 0) {
-                showToast("Veuillez configurer le montant du loyer dans 'Bail & Locataire'.", true);
-                return;
-            }
-
             const date = new Date();
             const monthName = capitalize(date.toLocaleDateString('fr-FR', { month: 'long' }));
-            const year = date.getFullYear();
-
-            const newTrans = {
-                type: 'loyer',
-                date: date.toISOString().split('T')[0],
-                amount: loyerTotal,
-                desc: `Loyer encaissé - ${monthName} ${year}`,
-                timestamp: new Date().toISOString()
-            };
-
             try {
-                await addDoc(collection(db, 'artifacts', appIdentifier, 'users', currentUser.uid, 'transactions'), newTrans);
+                await addDoc(collection(db, 'artifacts', appIdentifier, 'users', currentUser.uid, 'transactions'), {
+                    type: 'loyer', date: date.toISOString().split('T')[0], amount: loyerTotal, desc: `Loyer encaissé - ${monthName} ${date.getFullYear()}`, timestamp: new Date().toISOString()
+                });
                 showToast("Loyer du mois ajouté !");
-            } catch (error) {
-                showToast("Erreur lors de l'ajout automatique", true);
-            }
+            } catch (error) { showToast("Erreur lors de l'ajout automatique", true); }
         }
 
-        // --- Export CSV & JSON (Amélioration 20) ---
+        // --- Export CSV & JSON ---
         window.exportCSV = function() {
-            if (allTransactions.length === 0) {
-                showToast("Aucune donnée à exporter.", true);
-                return;
-            }
-
+            if (allTransactions.length === 0) { showToast("Aucune donnée à exporter.", true); return; }
             let csvContent = "Date;Type d'opération;Description;Montant (€)\n";
             allTransactions.forEach(t => {
-                const dateFormatee = new Date(t.date).toLocaleDateString('fr-FR');
-                const descFormatee = `"${t.desc.replace(/"/g, '""')}"`;
-                const amountFormate = t.amount.toString().replace('.', ',');
-                csvContent += `${dateFormatee};${t.type};${descFormatee};${amountFormate}\n`;
+                csvContent += `${new Date(t.date).toLocaleDateString('fr-FR')};${t.type};"${t.desc.replace(/"/g, '""')}";${t.amount.toString().replace('.', ',')}\n`;
             });
-
-            const bom = "\uFEFF"; 
-            const blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8;' });
-            triggerDownload(blob, `Historique_Immobilier_${new Date().toISOString().split('T')[0]}.csv`);
+            triggerDownload(new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' }), `Historique_${new Date().toISOString().split('T')[0]}.csv`);
         }
 
         window.exportJSON = function() {
-            const sauvegardeComplète = {
-                dateExport: new Date().toISOString(),
-                profil: appSettings,
-                transactions: allTransactions
-            };
-
-            const blob = new Blob([JSON.stringify(sauvegardeComplète, null, 2)], { type: 'application/json' });
-            triggerDownload(blob, `Sauvegarde_Complete_ImmoGerer_${new Date().toISOString().split('T')[0]}.json`);
-            showToast("Sauvegarde JSON générée avec succès !");
+            const data = { dateExport: new Date().toISOString(), profil: appSettings, transactions: allTransactions };
+            triggerDownload(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }), `Sauvegarde_Complete_${new Date().toISOString().split('T')[0]}.json`);
+            showToast("Sauvegarde JSON téléchargée !");
         }
 
         function triggerDownload(blob, filename) {
             const link = document.createElement("a");
-            const url = URL.createObjectURL(blob);
-            link.setAttribute("href", url);
-            link.setAttribute("download", filename);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            link.href = URL.createObjectURL(blob); link.download = filename;
+            document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
 
-        // --- AFFICHAGE ET CALCULS (Amélioration 12 - Cashflow) ---
+        // --- AFFICHAGE ET CALCULS ---
         function updateDashboard() {
             let totalLoyers = 0, totalCharges = 0, totalTravaux = 0, totalDepenses = 0;
             let depensesAnneeReelles = 0; 
@@ -858,13 +858,10 @@
                 else if (t.type === 'travaux') totalTravaux += t.amount;
                 else totalDepenses += t.amount; 
 
-                if (t.date.startsWith(anneeCourante) && t.type !== 'loyer') {
-                    depensesAnneeReelles += t.amount;
-                }
+                if (t.date.startsWith(anneeCourante) && t.type !== 'loyer') depensesAnneeReelles += t.amount;
             });
 
             const solde = totalLoyers - (totalCharges + totalTravaux + totalDepenses);
-
             document.getElementById('stat-loyers').innerText = formatMontant(totalLoyers);
             document.getElementById('stat-charges').innerText = formatMontant(totalCharges);
             document.getElementById('stat-travaux').innerText = formatMontant(totalTravaux);
@@ -876,60 +873,39 @@
             const dashList = document.getElementById('dash-transactions-list');
             dashList.innerHTML = '';
             const recent = allTransactions.slice(0, 5);
-            
-            if (recent.length === 0) {
-                dashList.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-500">Aucune opération.</td></tr>`;
-            } else {
-                recent.forEach(t => dashList.appendChild(createTransactionRow(t, false)));
-            }
+            if (recent.length === 0) dashList.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-500">Aucune opération.</td></tr>`;
+            else recent.forEach(t => dashList.appendChild(createTransactionRow(t, false)));
 
-            // Calcul Rentabilité et Cashflow
             const prixAchat = parseFloat(document.getElementById('prix_achat')?.value) || 0;
-            const loyerBase = parseFloat(document.getElementById('loyer_base')?.value) || 0;
-            const loyerCharges = parseFloat(document.getElementById('loyer_charges')?.value) || 0;
-            const loyerTotalMensuelAttendu = loyerBase + loyerCharges;
+            const loyerTotalMensuelAttendu = (parseFloat(document.getElementById('loyer_base')?.value) || 0) + (parseFloat(document.getElementById('loyer_charges')?.value) || 0);
             const mensualiteCredit = parseFloat(document.getElementById('credit_mensualite')?.value) || 0;
             
-            // Cashflow Net mensuel estimé
             const cashflow = loyerTotalMensuelAttendu - mensualiteCredit;
             const elCash = document.getElementById('stat-cashflow');
             elCash.innerText = formatMontant(cashflow);
             elCash.className = cashflow >= 0 ? "text-2xl font-bold text-purple-900" : "text-2xl font-bold text-red-600";
 
-            if (prixAchat > 0 && loyerBase > 0) {
-                const loyerAnnuelAttendu = loyerBase * 12;
-                const rentaBrute = (loyerAnnuelAttendu / prixAchat) * 100;
-                const loyerTotalAnnuelAttendu = loyerTotalMensuelAttendu * 12;
-                const rentaNette = ((loyerTotalAnnuelAttendu - depensesAnneeReelles) / prixAchat) * 100;
-
-                document.getElementById('stat-renta-brute').innerText = rentaBrute.toFixed(2) + " %";
-                document.getElementById('stat-renta-nette').innerText = rentaNette.toFixed(2) + " %";
+            if (prixAchat > 0 && loyerTotalMensuelAttendu > 0) {
+                document.getElementById('stat-renta-brute').innerText = (((loyerTotalMensuelAttendu * 12) / prixAchat) * 100).toFixed(2) + " %";
+                document.getElementById('stat-renta-nette').innerText = ((((loyerTotalMensuelAttendu * 12) - depensesAnneeReelles) / prixAchat) * 100).toFixed(2) + " %";
             } else {
                 document.getElementById('stat-renta-brute').innerText = "0.00 %";
                 document.getElementById('stat-renta-nette').innerText = "0.00 %";
             }
-
             renderChart(anneeCourante, mensualiteCredit);
         }
 
         function renderChart(annee, mensualiteCredit) {
             const ctx = document.getElementById('financeChart').getContext('2d');
-            if (financeChartInstance) {
-                financeChartInstance.destroy();
-            }
+            if (financeChartInstance) financeChartInstance.destroy();
 
-            let monthlyIncome = new Array(12).fill(0);
-            let monthlyExpense = new Array(12).fill(0);
-            let monthlyCreditArray = new Array(12).fill(mensualiteCredit); // Ajout du crédit dans le graph
+            let monthlyIncome = new Array(12).fill(0), monthlyExpense = new Array(12).fill(0), monthlyCredit = new Array(12).fill(mensualiteCredit);
 
             allTransactions.forEach(t => {
                 if (t.date.startsWith(annee)) {
                     let monthIdx = parseInt(t.date.split('-')[1]) - 1;
-                    if (t.type === 'loyer') {
-                        monthlyIncome[monthIdx] += t.amount;
-                    } else {
-                        monthlyExpense[monthIdx] += t.amount; 
-                    }
+                    if (t.type === 'loyer') monthlyIncome[monthIdx] += t.amount;
+                    else monthlyExpense[monthIdx] += t.amount; 
                 }
             });
 
@@ -940,107 +916,84 @@
                     datasets: [
                         { label: 'Revenus (€)', data: monthlyIncome, backgroundColor: '#22c55e', borderRadius: 4 },
                         { label: 'Dépenses (€)', data: monthlyExpense, backgroundColor: '#ef4444', borderRadius: 4 },
-                        { label: 'Crédit Immo (€)', data: monthlyCreditArray, backgroundColor: '#cbd5e1', borderRadius: 4, type: 'line', borderDash: [5, 5], fill: false, borderColor: '#94a3b8' }
+                        { label: 'Crédit Immo (€)', data: monthlyCredit, backgroundColor: '#cbd5e1', borderRadius: 4, type: 'line', borderDash: [5, 5], fill: false, borderColor: '#94a3b8' }
                     ]
                 },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false,
-                    plugins: { legend: { position: 'top' } },
-                    scales: { y: { beginAtZero: true } }
-                }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }
             });
         }
 
-        // --- CALENDRIER (Amélioration 18) ---
+        // --- CALENDRIER ---
         function initOrUpdateCalendar() {
             const calendarEl = document.getElementById('calendar');
             if (!calendarEl) return;
 
             const eventsData = allTransactions.map(t => {
-                let eventColor = '#64748b'; // gris par défaut (dépense/autre)
-                if (t.type === 'loyer') eventColor = '#22c55e'; // vert
-                if (t.type === 'charge') eventColor = '#ef4444'; // rouge
-                if (t.type === 'travaux') eventColor = '#f97316'; // orange
+                let eventColor = '#64748b'; 
+                if (t.type === 'loyer') eventColor = '#22c55e'; 
+                else if (t.type === 'charge') eventColor = '#ef4444';
+                else if (t.type === 'charge_immo') eventColor = '#d946ef'; // fuchsia
+                else if (t.type === 'taxe_fonciere') eventColor = '#f43f5e'; // rose
+                else if (t.type === 'csg') eventColor = '#ec4899'; // pink
+                else if (t.type === 'travaux') eventColor = '#f97316'; // orange
 
-                return {
-                    title: `${t.type === 'loyer' ? '+' : '-'}${t.amount}€ | ${t.desc}`,
-                    start: t.date,
-                    color: eventColor,
-                    allDay: true
-                };
+                return { title: `${t.type === 'loyer' ? '+' : '-'}${t.amount}€ | ${t.desc}`, start: t.date, color: eventColor, allDay: true };
             });
 
             if (!calendarInstance) {
                 calendarInstance = new FullCalendar.Calendar(calendarEl, {
-                    initialView: 'dayGridMonth',
-                    locale: 'fr',
-                    headerToolbar: {
-                        left: 'prev,next today',
-                        center: 'title',
-                        right: 'dayGridMonth,listMonth'
-                    },
-                    buttonText: {
-                        today: "Aujourd'hui",
-                        month: 'Mois',
-                        list: 'Liste'
-                    },
-                    events: eventsData,
-                    height: '100%'
+                    initialView: 'dayGridMonth', locale: 'fr',
+                    headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,listMonth' },
+                    buttonText: { today: "Aujourd'hui", month: 'Mois', list: 'Liste' },
+                    events: eventsData, height: '100%'
                 });
                 calendarInstance.render();
             } else {
                 calendarInstance.removeAllEvents();
                 calendarInstance.addEventSource(eventsData);
-                calendarInstance.render(); // Force redraw if container size changed
+                calendarInstance.render(); 
             }
         }
 
         function renderTransactionsTable() {
             const list = document.getElementById('full-transactions-list');
             list.innerHTML = '';
-            if (allTransactions.length === 0) {
-                list.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-500">Aucune opération.</td></tr>`;
-            } else {
-                allTransactions.forEach(t => list.appendChild(createTransactionRow(t, true)));
-            }
+            if (allTransactions.length === 0) list.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500">Aucune opération.</td></tr>`;
+            else allTransactions.forEach(t => list.appendChild(createTransactionRow(t, true)));
         }
 
-        function createTransactionRow(t, showDelete) {
+        function createTransactionRow(t, isFullTable) {
             const tr = document.createElement('tr');
             let typeBadge, amountColor;
             const sign = (t.type === 'loyer') ? '+' : '-';
 
-            if (t.type === 'loyer') { 
-                typeBadge = '<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">Loyer</span>'; 
-                amountColor = 'text-green-600 font-bold'; 
-            }
-            else if (t.type === 'charge') { 
-                typeBadge = '<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold">Charge R.</span>'; 
-                amountColor = 'text-red-600'; 
-            }
-            else if (t.type === 'travaux') { 
-                typeBadge = '<span class="bg-orange-100 text-orange-700 px-2 py-1 rounded text-xs font-bold">Travaux</span>'; 
-                amountColor = 'text-orange-600'; 
-            }
-            else if (t.type === 'depense') { 
-                typeBadge = '<span class="bg-slate-200 text-slate-700 px-2 py-1 rounded text-xs font-bold">Dépense</span>'; 
-                amountColor = 'text-slate-600'; 
-            }
-            else { 
-                typeBadge = `<span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-xs font-bold uppercase truncate max-w-[120px] inline-block align-bottom" title="${t.type}">${t.type}</span>`; 
-                amountColor = 'text-slate-600'; 
-            }
+            if (t.type === 'loyer') { typeBadge = '<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">Loyer</span>'; amountColor = 'text-green-600 font-bold'; }
+            else if (t.type === 'charge') { typeBadge = '<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold">Charge R.</span>'; amountColor = 'text-red-600'; }
+            else if (t.type === 'charge_immo') { typeBadge = '<span class="bg-fuchsia-100 text-fuchsia-700 px-2 py-1 rounded text-xs font-bold">Charge Immo.</span>'; amountColor = 'text-fuchsia-600'; }
+            else if (t.type === 'taxe_fonciere') { typeBadge = '<span class="bg-rose-100 text-rose-700 px-2 py-1 rounded text-xs font-bold">Taxe Fonc.</span>'; amountColor = 'text-rose-600'; }
+            else if (t.type === 'csg') { typeBadge = '<span class="bg-pink-100 text-pink-700 px-2 py-1 rounded text-xs font-bold">CSG</span>'; amountColor = 'text-pink-600'; }
+            else if (t.type === 'travaux') { typeBadge = '<span class="bg-orange-100 text-orange-700 px-2 py-1 rounded text-xs font-bold">Travaux</span>'; amountColor = 'text-orange-600'; }
+            else if (t.type === 'depense') { typeBadge = '<span class="bg-slate-200 text-slate-700 px-2 py-1 rounded text-xs font-bold">Dépense</span>'; amountColor = 'text-slate-600'; }
+            else { typeBadge = `<span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-xs font-bold uppercase truncate max-w-[120px] inline-block align-bottom" title="${t.type}">${t.type}</span>`; amountColor = 'text-slate-600'; }
 
             const displayDate = new Date(t.date).toLocaleDateString('fr-FR');
-            let actionHtml = showDelete ? `<button onclick="deleteTransaction('${t.id}')" class="text-red-500 hover:text-red-700 p-1"><i class="fa-solid fa-trash"></i></button>` : `<span class="text-slate-300">-</span>`;
+            
+            let actionHtml = '<span class="text-slate-300">-</span>';
+            if (isFullTable) {
+                actionHtml = `
+                    <div class="flex justify-center items-center gap-1">
+                        <button onclick="editTransaction('${t.id}')" class="text-blue-500 hover:text-blue-700 p-2 rounded hover:bg-blue-50 transition" title="Modifier"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="duplicateTransaction('${t.id}')" class="text-emerald-500 hover:text-emerald-700 p-2 rounded hover:bg-emerald-50 transition" title="Dupliquer"><i class="fa-solid fa-copy"></i></button>
+                        <button onclick="deleteTransaction('${t.id}')" class="text-red-500 hover:text-red-700 p-2 rounded hover:bg-red-50 transition" title="Supprimer"><i class="fa-solid fa-trash"></i></button>
+                    </div>`;
+            }
 
             tr.innerHTML = `
                 <td class="p-3 text-slate-700">${displayDate}</td>
                 <td class="p-3">${typeBadge}</td>
                 <td class="p-3 text-slate-700 font-medium">${t.desc}</td>
                 <td class="p-3 text-right ${amountColor}">${sign} ${formatMontant(t.amount)}</td>
-                <td class="p-3 text-center">${actionHtml}</td>
+                ${isFullTable ? `<td class="p-3 text-center">${actionHtml}</td>` : ''}
             `;
             return tr;
         }
@@ -1055,8 +1008,7 @@
             let totalAttendu = base + charges;
             
             let ratioProvision = totalAttendu > 0 ? (charges / totalAttendu) : 0;
-            let totalLoyerRecu = 0;
-            let totalChargesReelles = 0;
+            let totalLoyerRecu = 0, totalChargesReelles = 0;
 
             allTransactions.forEach(t => {
                 if (t.date.startsWith(yearStr)) {
@@ -1070,26 +1022,12 @@
 
             document.getElementById('reg_provisions').innerText = formatMontant(provisionsVersees);
             document.getElementById('reg_charges').innerText = formatMontant(totalChargesReelles);
-            
-            const diffEl = document.getElementById('reg_diff');
-            const msgEl = document.getElementById('reg_message');
-            const box = document.getElementById('reg_result_box');
-
+            const diffEl = document.getElementById('reg_diff'), msgEl = document.getElementById('reg_message'), box = document.getElementById('reg_result_box');
             diffEl.innerText = formatMontant(Math.abs(bilan));
 
-            if (bilan > 0) {
-                box.className = "p-6 rounded-xl text-center border-2 border-green-300 bg-green-50";
-                diffEl.className = "text-3xl font-black mb-2 text-green-700";
-                msgEl.innerText = "Trop-perçu : vous devez rendre cette somme au locataire.";
-            } else if (bilan < 0) {
-                box.className = "p-6 rounded-xl text-center border-2 border-red-300 bg-red-50";
-                diffEl.className = "text-3xl font-black mb-2 text-red-700";
-                msgEl.innerText = "Déficit : vous pouvez réclamer cette somme au locataire.";
-            } else {
-                box.className = "p-6 rounded-xl text-center border-2 border-slate-200 bg-slate-50";
-                diffEl.className = "text-3xl font-black mb-2 text-slate-700";
-                msgEl.innerText = "Parfait équilibre.";
-            }
+            if (bilan > 0) { box.className = "p-6 rounded-xl text-center border-2 border-green-300 bg-green-50"; diffEl.className = "text-3xl font-black mb-2 text-green-700"; msgEl.innerText = "Trop-perçu : vous devez rendre cette somme au locataire."; } 
+            else if (bilan < 0) { box.className = "p-6 rounded-xl text-center border-2 border-red-300 bg-red-50"; diffEl.className = "text-3xl font-black mb-2 text-red-700"; msgEl.innerText = "Déficit : vous pouvez réclamer cette somme au locataire."; } 
+            else { box.className = "p-6 rounded-xl text-center border-2 border-slate-200 bg-slate-50"; diffEl.className = "text-3xl font-black mb-2 text-slate-700"; msgEl.innerText = "Parfait équilibre."; }
         };
 
         // --- SIGNATURE ET UTILS ---
@@ -1107,98 +1045,52 @@
         });
 
         function showSignaturePreview(src) {
-            const img = document.getElementById('signature_preview');
-            const placeholder = document.getElementById('signature_placeholder');
-            img.src = src;
-            img.classList.remove('hidden');
-            placeholder.classList.add('hidden');
+            const img = document.getElementById('signature_preview'), placeholder = document.getElementById('signature_placeholder');
+            img.src = src; img.classList.remove('hidden'); placeholder.classList.add('hidden');
         }
 
         function showToast(message, isError = false) {
-            const toast = document.getElementById('toast');
-            const icon = document.getElementById('toast-icon');
+            const toast = document.getElementById('toast'), icon = document.getElementById('toast-icon');
             document.getElementById('toast-msg').innerText = message;
             
-            if (isError) {
-                toast.className = "hidden opacity-0 transition-opacity duration-300 fixed top-6 right-6 px-4 py-3 rounded-lg font-medium text-sm flex items-center gap-2 shadow-lg bg-red-100 text-red-800 border border-red-200 z-50";
-                icon.className = "fa-solid fa-circle-exclamation";
-            } else {
-                toast.className = "hidden opacity-0 transition-opacity duration-300 fixed top-6 right-6 px-4 py-3 rounded-lg font-medium text-sm flex items-center gap-2 shadow-lg bg-green-100 text-green-800 border border-green-200 z-50";
-                icon.className = "fa-solid fa-check-circle";
-            }
+            if (isError) { toast.className = "hidden opacity-0 transition-opacity duration-300 fixed top-6 right-6 px-4 py-3 rounded-lg font-medium text-sm flex items-center gap-2 shadow-lg bg-red-100 text-red-800 border border-red-200 z-50"; icon.className = "fa-solid fa-circle-exclamation"; } 
+            else { toast.className = "hidden opacity-0 transition-opacity duration-300 fixed top-6 right-6 px-4 py-3 rounded-lg font-medium text-sm flex items-center gap-2 shadow-lg bg-green-100 text-green-800 border border-green-200 z-50"; icon.className = "fa-solid fa-check-circle"; }
 
-            toast.classList.remove('hidden');
-            void toast.offsetWidth; 
-            toast.classList.remove('opacity-0');
-            toast.classList.add('opacity-100');
-            
-            setTimeout(() => {
-                toast.classList.remove('opacity-100');
-                toast.classList.add('opacity-0');
-                setTimeout(() => toast.classList.add('hidden'), 300);
-            }, 5000);
+            toast.classList.remove('hidden'); void toast.offsetWidth; toast.classList.remove('opacity-0'); toast.classList.add('opacity-100');
+            setTimeout(() => { toast.classList.remove('opacity-100'); toast.classList.add('opacity-0'); setTimeout(() => toast.classList.add('hidden'), 300); }, 5000);
         }
 
-        function formatMontant(montant) {
-            return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(montant);
-        }
-
-        function capitalize(str) {
-            return str.charAt(0).toUpperCase() + str.slice(1);
-        }
+        function formatMontant(montant) { return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(montant); }
+        function capitalize(str) { return str.charAt(0).toUpperCase() + str.slice(1); }
 
         // --- GÉNÉRATION DU PDF (Quittances) ---
         document.getElementById('btn-generate').addEventListener('click', async () => {
             const data = {
-                bailleur_nom: document.getElementById('bailleur_nom').value,
-                bailleur_adresse: document.getElementById('bailleur_adresse').value.replace(/\n/g, '<br>'),
-                locataire_nom: document.getElementById('locataire_nom').value,
-                logement_adresse: document.getElementById('logement_adresse').value.replace(/\n/g, '<br>'),
-                loyer_base: parseFloat(document.getElementById('loyer_base').value) || 0,
-                loyer_charges: parseFloat(document.getElementById('loyer_charges').value) || 0,
-                lieu_emission: document.getElementById('lieu_emission').value || '...',
-                signature: currentSignatureData
+                bailleur_nom: document.getElementById('bailleur_nom').value, bailleur_adresse: document.getElementById('bailleur_adresse').value.replace(/\n/g, '<br>'),
+                locataire_nom: document.getElementById('locataire_nom').value, logement_adresse: document.getElementById('logement_adresse').value.replace(/\n/g, '<br>'),
+                loyer_base: parseFloat(document.getElementById('loyer_base').value) || 0, loyer_charges: parseFloat(document.getElementById('loyer_charges').value) || 0,
+                lieu_emission: document.getElementById('lieu_emission').value || '...', signature: currentSignatureData
             };
             data.total = data.loyer_base + data.loyer_charges;
+            const dateDebut = document.getElementById('date_debut').value, dateFin = document.getElementById('date_fin').value;
 
-            const dateDebut = document.getElementById('date_debut').value;
-            const dateFin = document.getElementById('date_fin').value;
+            if (!dateDebut || !dateFin) { showToast("Sélectionnez une période valide.", true); return; }
+            let start = new Date(dateDebut + "-01"), end = new Date(dateFin + "-01");
+            if (start > end) { showToast("Erreur de dates.", true); return; }
 
-            if (!dateDebut || !dateFin) {
-                showToast("Sélectionnez une période valide.", true);
-                return;
-            }
-
-            let start = new Date(dateDebut + "-01");
-            let end = new Date(dateFin + "-01");
-            
-            if (start > end) {
-                showToast("Erreur de dates.", true);
-                return;
-            }
-
-            const btn = document.getElementById('btn-generate');
-            const spinner = document.getElementById('loading-spinner');
-            btn.classList.add('hidden');
-            spinner.classList.remove('hidden');
+            const btn = document.getElementById('btn-generate'), spinner = document.getElementById('loading-spinner');
+            btn.classList.add('hidden'); spinner.classList.remove('hidden');
 
             const workspace = document.getElementById('pdf-workspace');
-            workspace.innerHTML = ''; 
-            workspace.style.display = 'block'; 
+            workspace.innerHTML = ''; workspace.style.display = 'block'; 
 
-            let currentMonthIterator = new Date(start);
-            let today = new Date();
-            let dateGeneration = today.toLocaleDateString('fr-FR');
+            let currentMonthIterator = new Date(start), dateGeneration = new Date().toLocaleDateString('fr-FR');
 
             while (currentMonthIterator <= end) {
-                let year = currentMonthIterator.getFullYear();
-                let monthIdx = currentMonthIterator.getMonth();
-                
+                let year = currentMonthIterator.getFullYear(), monthIdx = currentMonthIterator.getMonth();
                 let monthName = capitalize(currentMonthIterator.toLocaleDateString('fr-FR', { month: 'long' }));
-                let firstDay = new Date(year, monthIdx, 1);
-                let lastDay = new Date(year, monthIdx + 1, 0); 
-                let periodStartStr = firstDay.toLocaleDateString('fr-FR');
-                let periodEndStr = lastDay.toLocaleDateString('fr-FR');
+                let firstDay = new Date(year, monthIdx, 1), lastDay = new Date(year, monthIdx + 1, 0); 
+                let periodStartStr = firstDay.toLocaleDateString('fr-FR'), periodEndStr = lastDay.toLocaleDateString('fr-FR');
 
                 let pageHtml = `
                     <div class="quittance-page">
@@ -1221,32 +1113,21 @@
                         <div style="margin-bottom: 30px;">
                             <p style="font-size: 15px; line-height: 1.6; text-align: justify;">
                                 Reçu de <strong>${data.locataire_nom}</strong> la somme de <strong>${formatMontant(data.total)}</strong>, 
-                                au titre du paiement du loyer et des charges du local d'habitation désigné ci-dessus, 
-                                pour la période du <strong>${periodStartStr}</strong> au <strong>${periodEndStr}</strong>.
+                                au titre du paiement du loyer et des charges du local d'habitation désigné ci-dessus, pour la période du <strong>${periodStartStr}</strong> au <strong>${periodEndStr}</strong>.
                             </p>
                         </div>
                         <div style="margin-bottom: 40px;">
                             <h3 style="font-size: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-bottom: 15px;">Détail du règlement</h3>
                             <table style="width: 100%; border-collapse: collapse;">
-                                <tr>
-                                    <td style="padding: 8px 0;">Loyer de base</td>
-                                    <td style="padding: 8px 0; text-align: right;">${formatMontant(data.loyer_base)}</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;">Provisions pour charges</td>
-                                    <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; text-align: right;">${formatMontant(data.loyer_charges)}</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 12px 0; font-weight: bold; font-size: 18px;">Total reçu</td>
-                                    <td style="padding: 12px 0; font-weight: bold; font-size: 18px; text-align: right; color: #2563eb;">${formatMontant(data.total)}</td>
-                                </tr>
+                                <tr><td style="padding: 8px 0;">Loyer de base</td><td style="padding: 8px 0; text-align: right;">${formatMontant(data.loyer_base)}</td></tr>
+                                <tr><td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;">Provisions pour charges</td><td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; text-align: right;">${formatMontant(data.loyer_charges)}</td></tr>
+                                <tr><td style="padding: 12px 0; font-weight: bold; font-size: 18px;">Total reçu</td><td style="padding: 12px 0; font-weight: bold; font-size: 18px; text-align: right; color: #2563eb;">${formatMontant(data.total)}</td></tr>
                             </table>
                         </div>
                         <div style="margin-bottom: 40px;">
                             <p style="font-size: 12px; color: #6b7280; font-style: italic;">
                                 En application de l'article 21 de la loi n° 89-462 du 6 juillet 1989, la présente quittance annule tous les reçus qui auraient pu être donnés pour acompte versé sur le présent terme. <br>
-                                Le paiement de la présente quittance n'emporte pas présomption de paiement des termes antérieurs.<br>
-                                Sous réserve de tous mes droits pour le passé et l'avenir.
+                                Le paiement de la présente quittance n'emporte pas présomption de paiement des termes antérieurs.<br>Sous réserve de tous mes droits pour le passé et l'avenir.
                             </p>
                         </div>
                         <div style="display: flex; justify-content: flex-end;">
@@ -1262,215 +1143,90 @@
                 currentMonthIterator.setMonth(currentMonthIterator.getMonth() + 1);
             }
 
-            const opt = {
-                margin:       0,
-                filename:     `Quittances_${dateDebut}_a_${dateFin}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
+            const opt = { margin: 0, filename: `Quittances_${dateDebut}_a_${dateFin}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
 
-            try {
-                await window.html2pdf().set(opt).from(workspace).save();
-                showToast("PDF généré avec succès !");
-            } catch (error) {
-                console.error(error);
-                showToast("Erreur création PDF.", true);
-            } finally {
-                setTimeout(() => {
-                    workspace.style.display = 'none';
-                    workspace.innerHTML = '';
-                    spinner.classList.add('hidden');
-                    btn.classList.remove('hidden');
-                }, 1500);
-            }
+            try { await window.html2pdf().set(opt).from(workspace).save(); showToast("PDF généré avec succès !");
+            } catch (error) { showToast("Erreur création PDF.", true);
+            } finally { setTimeout(() => { workspace.style.display = 'none'; workspace.innerHTML = ''; spinner.classList.add('hidden'); btn.classList.remove('hidden'); }, 1500); }
         });
 
         // --- GESTION DE L'API GMAIL ---
         window.authorizeGmail = function(callback) {
             const clientId = document.getElementById('google_client_id').value;
-            if (!clientId) {
-                showToast("Veuillez renseigner votre ID Client Google au-dessus.", true);
-                return;
-            }
-            
+            if (!clientId) { showToast("Veuillez renseigner votre ID Client Google au-dessus.", true); return; }
             try {
-                const client = google.accounts.oauth2.initTokenClient({
-                    client_id: clientId,
-                    scope: 'https://www.googleapis.com/auth/gmail.send',
+                google.accounts.oauth2.initTokenClient({
+                    client_id: clientId, scope: 'https://www.googleapis.com/auth/gmail.send',
                     callback: (tokenResponse) => {
-                        if (tokenResponse && tokenResponse.access_token) {
-                            gmailToken = tokenResponse.access_token;
-                            showToast("Autorisation Gmail réussie !");
-                            if(typeof callback === 'function') callback();
-                        } else {
-                            showToast("L'autorisation a échoué ou a été annulée.", true);
-                        }
+                        if (tokenResponse && tokenResponse.access_token) { gmailToken = tokenResponse.access_token; showToast("Autorisation Gmail réussie !"); if(typeof callback === 'function') callback(); } 
+                        else { showToast("L'autorisation a échoué ou a été annulée.", true); }
                     },
-                });
-                client.requestAccessToken();
-            } catch (err) {
-                console.error(err);
-                showToast("Erreur d'initialisation Google. Vérifiez l'ID Client.", true);
-            }
+                }).requestAccessToken();
+            } catch (err) { showToast("Erreur d'initialisation Google. Vérifiez l'ID Client.", true); }
         };
 
         function encodeBase64Url(str) {
-            const encoder = new TextEncoder();
-            const bytes = encoder.encode(str);
-            let binString = '';
-            for (let i = 0; i < bytes.byteLength; i++) {
-                binString += String.fromCharCode(bytes[i]);
-            }
+            const bytes = new TextEncoder().encode(str);
+            let binString = ''; for (let i = 0; i < bytes.byteLength; i++) { binString += String.fromCharCode(bytes[i]); }
             return btoa(binString).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
         }
 
         async function sendEmailViaGmailAPI(to, subject, body, pdfDataUri) {
-            if (!gmailToken) {
-                showToast("Connexion à Gmail requise.", true);
-                window.authorizeGmail(() => sendEmailViaGmailAPI(to, subject, body, pdfDataUri));
-                return;
-            }
-
+            if (!gmailToken) { showToast("Connexion à Gmail requise.", true); window.authorizeGmail(() => sendEmailViaGmailAPI(to, subject, body, pdfDataUri)); return; }
             showToast("Envoi de l'email en cours...");
             const boundary = "quittance_boundary_" + Date.now().toString(16);
-            
-            let email = `To: ${to}\r\n`;
-            email += `Subject: =?utf-8?B?${encodeBase64Url(subject)}?=\r\n`;
-            email += `MIME-Version: 1.0\r\n`;
-            email += `Content-Type: multipart/mixed; boundary="${boundary}"\r\n\r\n`;
-
-            email += `--${boundary}\r\n`;
-            email += `Content-Type: text/plain; charset="UTF-8"\r\n\r\n`;
-            email += `${body}\r\n\r\n`;
-
+            let email = `To: ${to}\r\nSubject: =?utf-8?B?${encodeBase64Url(subject)}?=\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary="${boundary}"\r\n\r\n`;
+            email += `--${boundary}\r\nContent-Type: text/plain; charset="UTF-8"\r\n\r\n${body}\r\n\r\n`;
             if (pdfDataUri) {
                 const pdfBase64 = pdfDataUri.split(',')[1];
-                email += `--${boundary}\r\n`;
-                email += `Content-Type: application/pdf; name="quittance.pdf"\r\n`;
-                email += `Content-Disposition: attachment; filename="quittance.pdf"\r\n`;
-                email += `Content-Transfer-Encoding: base64\r\n\r\n`;
-                email += `${pdfBase64}\r\n\r\n`;
+                email += `--${boundary}\r\nContent-Type: application/pdf; name="quittance.pdf"\r\nContent-Disposition: attachment; filename="quittance.pdf"\r\nContent-Transfer-Encoding: base64\r\n\r\n${pdfBase64}\r\n\r\n`;
             }
-
             email += `--${boundary}--\r\n`;
-
-            const encodedEmail = encodeBase64Url(email);
-
             try {
                 const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${gmailToken}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ raw: encodedEmail })
+                    method: 'POST', headers: { 'Authorization': `Bearer ${gmailToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ raw: encodeBase64Url(email) })
                 });
-
-                if (response.ok) {
-                    showToast("Email envoyé directement avec succès !");
-                } else {
+                if (response.ok) { showToast("Email envoyé directement avec succès !"); } 
+                else {
                     const err = await response.json();
-                    if (err.error && err.error.status === 'UNAUTHENTICATED') {
-                        gmailToken = null; 
-                        window.authorizeGmail(() => sendEmailViaGmailAPI(to, subject, body, pdfDataUri));
-                    } else {
-                        showToast("Erreur API : Vérifiez votre configuration Gmail", true);
-                    }
+                    if (err.error && err.error.status === 'UNAUTHENTICATED') { gmailToken = null; window.authorizeGmail(() => sendEmailViaGmailAPI(to, subject, body, pdfDataUri)); } 
+                    else { showToast("Erreur API : Vérifiez votre configuration Gmail", true); }
                 }
-            } catch (error) {
-                console.error(error);
-                showToast("Erreur réseau lors de l'envoi de l'email.", true);
-            }
+            } catch (error) { showToast("Erreur réseau lors de l'envoi de l'email.", true); }
         }
 
-        // --- Préparer l'Email avec le PDF via API ---
         document.getElementById('btn-generate-email').addEventListener('click', async () => {
             const email = document.getElementById('locataire_email').value;
-            if (!email) {
-                showToast("Attention: Renseignez l'email du locataire dans l'onglet 'Bail'", true);
-                switchTab('locataire');
-                return;
-            }
+            if (!email) { showToast("Attention: Renseignez l'email du locataire dans l'onglet 'Bail'", true); switchTab('locataire'); return; }
+            if (!document.getElementById('google_client_id').value) { showToast("L'ID Client Google est manquant pour l'envoi direct.", true); switchTab('locataire'); return; }
 
-            if (!document.getElementById('google_client_id').value) {
-                showToast("L'ID Client Google est manquant pour l'envoi direct.", true);
-                switchTab('locataire');
-                return;
-            }
-
-            const bailleur = document.getElementById('bailleur_nom').value || 'Le Bailleur';
             const subject = `Votre quittance de loyer`;
-            const body = `Bonjour,\n\nVeuillez trouver en pièce jointe votre quittance de loyer.\n\nCordialement,\n${bailleur}`;
+            const body = `Bonjour,\n\nVeuillez trouver en pièce jointe votre quittance de loyer.\n\nCordialement,\n${document.getElementById('bailleur_nom').value || 'Le Bailleur'}`;
 
-            showConfirmModal(
-                "Envoi automatique de Quittance",
-                `Vous êtes sur le point d'envoyer la quittance au locataire <strong>${email}</strong>.`,
-                `<strong>Sujet :</strong> ${subject}<br><br><strong>Message :</strong><br>${body.replace(/\n/g, '<br>')}<br><br><em><i class="fa-solid fa-paperclip"></i> quittance.pdf sera générée et attachée automatiquement.</em>`,
-                () => {
-                    const btn = document.getElementById('btn-generate-email');
-                    const spinner = document.getElementById('loading-spinner');
-                    btn.classList.add('hidden');
-                    spinner.classList.remove('hidden');
-
-                    try {
-                        document.getElementById('btn-generate').click(); 
-                        
-                        setTimeout(async () => {
-                            const workspace = document.getElementById('pdf-workspace');
-                            const opt = {
-                                margin:       0,
-                                filename:     'quittance.pdf',
-                                image:        { type: 'jpeg', quality: 0.98 },
-                                html2canvas:  { scale: 2, useCORS: true },
-                                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-                            };
-                            
-                            try {
-                                const pdfDataUri = await window.html2pdf().set(opt).from(workspace).outputPdf('datauristring');
-                                await sendEmailViaGmailAPI(email, subject, body, pdfDataUri);
-                            } catch(err) {
-                                console.error(err);
-                                showToast("Erreur lors de la préparation de la pièce jointe.", true);
-                            } finally {
-                                spinner.classList.add('hidden');
-                                btn.classList.remove('hidden');
-                            }
-                        }, 1000); 
-                    } catch (error) {
-                        spinner.classList.add('hidden');
-                        btn.classList.remove('hidden');
-                    }
-                }
-            );
+            showConfirmModal("Envoi automatique de Quittance", `Vous êtes sur le point d'envoyer la quittance au locataire <strong>${email}</strong>.`, `<strong>Sujet :</strong> ${subject}<br><br><strong>Message :</strong><br>${body.replace(/\n/g, '<br>')}<br><br><em><i class="fa-solid fa-paperclip"></i> quittance.pdf sera générée et attachée automatiquement.</em>`, () => {
+                const btn = document.getElementById('btn-generate-email'), spinner = document.getElementById('loading-spinner');
+                btn.classList.add('hidden'); spinner.classList.remove('hidden');
+                try {
+                    document.getElementById('btn-generate').click(); 
+                    setTimeout(async () => {
+                        try {
+                            const pdfDataUri = await window.html2pdf().set({ margin: 0, filename: 'quittance.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(document.getElementById('pdf-workspace')).outputPdf('datauristring');
+                            await sendEmailViaGmailAPI(email, subject, body, pdfDataUri);
+                        } catch(err) { showToast("Erreur lors de la préparation de la pièce jointe.", true); } 
+                        finally { spinner.classList.add('hidden'); btn.classList.remove('hidden'); }
+                    }, 1000); 
+                } catch (error) { spinner.classList.add('hidden'); btn.classList.remove('hidden'); }
+            });
         });
 
-        // --- Email de relance API ---
         window.sendRelanceEmail = function() {
             const email = document.getElementById('locataire_email').value;
-            const locataire = document.getElementById('locataire_nom').value || 'Locataire';
-            const bailleur = document.getElementById('bailleur_nom').value || 'Le Bailleur';
-            
-            const base = parseFloat(document.getElementById('loyer_base').value) || 0;
-            const charges = parseFloat(document.getElementById('loyer_charges').value) || 0;
-            const total = base + charges;
-
-            if (!email) {
-                showToast("Veuillez renseigner l'email du locataire au-dessus.", true);
-                return;
-            }
-
+            if (!email) { showToast("Veuillez renseigner l'email du locataire au-dessus.", true); return; }
+            const total = (parseFloat(document.getElementById('loyer_base').value) || 0) + (parseFloat(document.getElementById('loyer_charges').value) || 0);
             const subject = `Relance : Retard de paiement de loyer`;
-            const body = `Bonjour ${locataire},\n\nSauf erreur ou omission de ma part, je n'ai pas encore reçu le paiement de votre loyer d'un montant de ${total} € pour le mois en cours.\n\nJe vous remercie de bien vouloir procéder au règlement dans les plus brefs délais.\n\nSi vous avez déjà effectué le paiement entre-temps, veuillez ne pas tenir compte de ce message.\n\nCordialement,\n${bailleur}`;
+            const body = `Bonjour ${document.getElementById('locataire_nom').value || 'Locataire'},\n\nSauf erreur ou omission de ma part, je n'ai pas encore reçu le paiement de votre loyer d'un montant de ${total} € pour le mois en cours.\n\nJe vous remercie de bien vouloir procéder au règlement dans les plus brefs délais.\n\nSi vous avez déjà effectué le paiement entre-temps, veuillez ne pas tenir compte de ce message.\n\nCordialement,\n${document.getElementById('bailleur_nom').value || 'Le Bailleur'}`;
 
-            showConfirmModal(
-                "Avertissement : Envoi de Relance",
-                `Vous allez envoyer un email de relance d'impayé à <strong>${email}</strong>. Relisez l'aperçu ci-dessous :`,
-                `<strong>Sujet :</strong> ${subject}<br><br><strong>Message :</strong><br>${body.replace(/\n/g, '<br>')}`,
-                () => {
-                    sendEmailViaGmailAPI(email, subject, body, null);
-                }
-            );
+            showConfirmModal("Avertissement : Envoi de Relance", `Vous allez envoyer un email de relance d'impayé à <strong>${email}</strong>. Relisez l'aperçu ci-dessous :`, `<strong>Sujet :</strong> ${subject}<br><br><strong>Message :</strong><br>${body.replace(/\n/g, '<br>')}`, () => { sendEmailViaGmailAPI(email, subject, body, null); });
         };
     </script>
 </body>
