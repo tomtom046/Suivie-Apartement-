@@ -1,0 +1,1331 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion Locative Complète</title>
+    <!-- Tailwind CSS pour le style -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- html2pdf.js pour la génération de PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Font Awesome pour les icônes -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js pour les graphiques interactifs (Amélioration 13) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Identity Services pour l'API Gmail -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        /* Styles spécifiques pour le rendu PDF */
+        #pdf-workspace {
+            display: none; 
+            background: white;
+        }
+        .quittance-page {
+            width: 100%;
+            padding: 40px;
+            font-family: 'Arial', sans-serif;
+            color: #333;
+            box-sizing: border-box;
+            page-break-after: always;
+        }
+        .quittance-page:last-child {
+            page-break-after: auto;
+        }
+        /* Cache la scrollbar globale mais permet le scroll */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .tab-btn.active {
+            background-color: #2563eb; /* blue-600 */
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans text-gray-800 h-screen overflow-hidden flex flex-col md:flex-row">
+
+    <!-- Toast Notification (Fixé en haut à droite) -->
+    <div id="toast" class="hidden opacity-0 transition-opacity duration-300 fixed top-6 right-6 px-4 py-3 rounded-lg font-medium text-sm flex items-center gap-2 shadow-lg z-50">
+        <i id="toast-icon" class="fa-solid fa-check-circle"></i> <span id="toast-msg">Action réussie !</span>
+    </div>
+
+    <!-- Menu Latéral (Sidebar) -->
+    <aside class="w-full md:w-64 bg-slate-800 text-white flex flex-col shadow-xl z-20 flex-shrink-0">
+        <div class="p-6 flex items-center gap-3 border-b border-slate-700">
+            <i class="fa-solid fa-building-user text-2xl text-blue-400"></i>
+            <h1 class="text-xl font-bold tracking-wide">ImmoGérer</h1>
+        </div>
+        
+        <nav class="flex-1 overflow-y-auto py-4 flex flex-col gap-2 px-3">
+            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="tab-btn active flex items-center gap-3 w-full text-left px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">
+                <i class="fa-solid fa-chart-pie w-5 text-center"></i> Tableau de bord
+            </button>
+            <button onclick="switchTab('locataire')" id="nav-locataire" class="tab-btn flex items-center gap-3 w-full text-left px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">
+                <i class="fa-solid fa-file-signature w-5 text-center"></i> Bail & Locataire
+            </button>
+            <button onclick="switchTab('finances')" id="nav-finances" class="tab-btn flex items-center gap-3 w-full text-left px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">
+                <i class="fa-solid fa-wallet w-5 text-center"></i> Finances & Suivi
+            </button>
+            <button onclick="switchTab('regularisation')" id="nav-regularisation" class="tab-btn flex items-center gap-3 w-full text-left px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">
+                <i class="fa-solid fa-scale-balanced w-5 text-center"></i> Régularisation
+            </button>
+            <button onclick="switchTab('quittances')" id="nav-quittances" class="tab-btn flex items-center gap-3 w-full text-left px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">
+                <i class="fa-solid fa-file-pdf w-5 text-center"></i> Quittances PDF
+            </button>
+        </nav>
+
+        <div class="p-4 border-t border-slate-700 text-xs text-slate-400 flex items-center justify-between">
+            <span id="connection-status"><i class="fa-solid fa-circle-notch fa-spin text-blue-400"></i> Connexion...</span>
+        </div>
+    </aside>
+
+    <!-- Contenu Principal -->
+    <main class="flex-1 overflow-y-auto p-4 md:p-8 bg-slate-50 relative h-full">
+
+        <!-- TAB 1 : TABLEAU DE BORD -->
+        <div id="tab-dashboard" class="tab-content block space-y-6 max-w-6xl mx-auto">
+            <h2 class="text-2xl font-bold text-slate-800 mb-6 border-b pb-2">Vue d'ensemble</h2>
+            
+            <!-- Cartes de statistiques -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-100 flex items-center gap-4">
+                    <div class="bg-green-100 text-green-600 p-4 rounded-lg"><i class="fa-solid fa-arrow-down-up-lock text-xl"></i></div>
+                    <div>
+                        <p class="text-sm text-slate-500 font-medium">Loyers encaissés</p>
+                        <h3 class="text-2xl font-bold text-slate-800" id="stat-loyers">0,00 €</h3>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-100 flex items-center gap-4">
+                    <div class="bg-red-100 text-red-600 p-4 rounded-lg"><i class="fa-solid fa-file-invoice-dollar text-xl"></i></div>
+                    <div>
+                        <p class="text-sm text-slate-500 font-medium">Charges (Récup.)</p>
+                        <h3 class="text-2xl font-bold text-slate-800" id="stat-charges">0,00 €</h3>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-100 flex items-center gap-4">
+                    <div class="bg-orange-100 text-orange-600 p-4 rounded-lg"><i class="fa-solid fa-hammer text-xl"></i></div>
+                    <div>
+                        <p class="text-sm text-slate-500 font-medium">Travaux / Entretien</p>
+                        <h3 class="text-2xl font-bold text-slate-800" id="stat-travaux">0,00 €</h3>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-100 flex items-center gap-4">
+                    <div class="bg-blue-100 text-blue-600 p-4 rounded-lg"><i class="fa-solid fa-sack-dollar text-xl"></i></div>
+                    <div>
+                        <p class="text-sm text-slate-500 font-medium">Bénéfice net</p>
+                        <h3 class="text-2xl font-bold text-slate-800" id="stat-solde">0,00 €</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NOUVEAU : Graphiques (Amélioration 13) & Rentabilité (Amélioration 14) -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+                <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+                    <h3 class="text-lg font-semibold mb-4 text-slate-800">Bilan Annuel (Revenus vs Dépenses)</h3>
+                    <div class="relative h-64 w-full">
+                        <canvas id="financeChart"></canvas>
+                    </div>
+                </div>
+                <div class="lg:col-span-1 bg-white rounded-xl shadow-sm border border-slate-100 p-6 flex flex-col">
+                    <h3 class="text-lg font-semibold mb-4 text-slate-800">Indicateurs de Rentabilité</h3>
+                    <div class="space-y-4 flex-1 flex flex-col justify-center">
+                        <div class="p-4 bg-blue-50 rounded-lg border border-blue-100">
+                            <p class="text-sm text-blue-700 font-medium">Rentabilité Brute</p>
+                            <p class="text-3xl font-bold text-blue-900" id="stat-renta-brute">0.00 %</p>
+                            <p class="text-xs text-blue-600 mt-1">Basée sur le loyer annuel total et le prix d'achat</p>
+                        </div>
+                        <div class="p-4 bg-green-50 rounded-lg border border-green-100">
+                            <p class="text-sm text-green-700 font-medium">Rentabilité Nette (Année courante)</p>
+                            <p class="text-3xl font-bold text-green-900" id="stat-renta-nette">0.00 %</p>
+                            <p class="text-xs text-green-600 mt-1">Loyer moins vos dépenses de l'année</p>
+                        </div>
+                        <p class="text-xs text-slate-400 italic mt-2 text-center">Nécessite le 'Prix d'achat' dans l'onglet Bail</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dernières transactions -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 mt-6">
+                <h3 class="text-lg font-semibold mb-4 text-slate-800">Dernières opérations</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-500 text-sm uppercase tracking-wider">
+                                <th class="p-3 rounded-tl-lg">Date</th>
+                                <th class="p-3">Type</th>
+                                <th class="p-3">Description</th>
+                                <th class="p-3 text-right rounded-tr-lg">Montant</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dash-transactions-list" class="text-sm divide-y divide-slate-100">
+                            <tr><td colspan="4" class="p-4 text-center text-slate-500">Chargement...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2 : BAIL & LOCATAIRE -->
+        <div id="tab-locataire" class="tab-content hidden space-y-6 max-w-4xl mx-auto">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+                <h2 class="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2 border-b pb-2">
+                    <i class="fa-solid fa-pen-to-square text-blue-500"></i> Contrat & Profils
+                </h2>
+                
+                <form id="settings-form" class="space-y-6">
+                    <!-- Bailleur -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                            <h3 class="font-bold text-slate-700 mb-3"><i class="fa-solid fa-user-tie mr-2"></i>Le Bailleur (Vous)</h3>
+                            <input type="text" id="bailleur_nom" placeholder="Nom et Prénom" class="w-full p-2 border border-slate-300 rounded-md mb-3 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-slate-200" disabled>
+                            <textarea id="bailleur_adresse" placeholder="Votre adresse complète" class="w-full p-2 border border-slate-300 rounded-md h-20 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-slate-200" disabled></textarea>
+                            
+                            <!-- NOUVEAU : Prix d'achat pour rentabilité (Amélioration 14) -->
+                            <div class="mt-3">
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Prix d'achat du bien (€) - Optionnel</label>
+                                <input type="number" id="prix_achat" step="0.01" placeholder="Ex: 150000" class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 disabled:bg-slate-200" disabled>
+                            </div>
+                        </div>
+                        <!-- Locataire -->
+                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                            <h3 class="font-bold text-slate-700 mb-3"><i class="fa-solid fa-user mr-2"></i>Le Locataire</h3>
+                            <input type="text" id="locataire_nom" placeholder="Nom et Prénom du locataire" class="w-full p-2 border border-slate-300 rounded-md mb-3 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-slate-200" disabled>
+                            
+                            <!-- NOUVEAU : Email du locataire -->
+                            <input type="email" id="locataire_email" placeholder="Adresse Email (ex: jean@mail.com)" class="w-full p-2 border border-slate-300 rounded-md mb-3 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-slate-200" disabled>
+                            
+                            <textarea id="logement_adresse" placeholder="Adresse du logement loué" class="w-full p-2 border border-slate-300 rounded-md h-20 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-slate-200" disabled></textarea>
+                            
+                            <!-- NOUVEAU : Dépôt de garantie (Amélioration 5) -->
+                            <div class="mt-3">
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Dépôt de garantie versé (Caution €)</label>
+                                <input type="number" id="caution" step="0.01" class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 disabled:bg-slate-200" disabled>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Location details -->
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                        <h3 class="font-bold text-slate-700 mb-3"><i class="fa-solid fa-money-bill-wave mr-2"></i>Conditions Financières</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Loyer de base (€)</label>
+                                <input type="number" id="loyer_base" step="0.01" class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 disabled:bg-slate-200" disabled>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Charges (Provisions €)</label>
+                                <input type="number" id="loyer_charges" step="0.01" class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 disabled:bg-slate-200" disabled>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Lieu de signature</label>
+                                <input type="text" id="lieu_emission" placeholder="Ex: Paris" class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 disabled:bg-slate-200" disabled>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Signature -->
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                        <h3 class="font-bold text-slate-700 mb-2 flex items-center gap-2"><i class="fa-solid fa-signature text-blue-500"></i> Votre Signature</h3>
+                        <p class="text-sm text-slate-500 mb-3">Importez une image pour signer automatiquement les quittances.</p>
+                        <input type="file" id="signature_file" accept="image/png, image/jpeg" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 mb-4 disabled:opacity-50" disabled/>
+                        <div class="h-24 w-48 border-2 border-dashed border-slate-300 rounded-md flex items-center justify-center bg-white overflow-hidden">
+                            <img id="signature_preview" src="" alt="Aperçu signature" class="max-h-full max-w-full hidden">
+                            <span id="signature_placeholder" class="text-slate-400 text-sm">Aucune signature</span>
+                        </div>
+                    </div>
+
+                    <!-- NOUVEAU : Configuration Gmail API -->
+                    <div class="bg-red-50 p-4 rounded-lg border border-red-200">
+                        <h3 class="font-bold text-red-800 mb-2 flex items-center gap-2"><i class="fa-brands fa-google"></i> Envoi direct par Gmail (API)</h3>
+                        <p class="text-sm text-red-600 mb-3">Pour envoyer les emails en arrière-plan, ajoutez votre ID Client Google Cloud. Vous devrez autoriser l'application une fois.</p>
+                        <input type="text" id="google_client_id" placeholder="Votre ID Client (ex: 12345-abcde.apps.googleusercontent.com)" class="w-full p-2 border border-red-300 rounded-md mb-3 focus:ring-2 focus:ring-red-500 focus:outline-none disabled:bg-red-100" disabled>
+                        <button type="button" onclick="authorizeGmail()" class="bg-white text-red-700 hover:bg-red-100 border border-red-300 font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2 text-sm shadow-sm">
+                            <i class="fa-solid fa-link"></i> Connecter mon compte Gmail
+                        </button>
+                    </div>
+
+                    <!-- Actions Rapides Communication -->
+                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
+                        <div>
+                            <h3 class="font-bold text-blue-800 mb-1"><i class="fa-solid fa-paper-plane mr-2"></i>Communication</h3>
+                            <p class="text-sm text-blue-600">Envoi direct en arrière-plan</p>
+                        </div>
+                        <button type="button" onclick="sendRelanceEmail()" class="bg-white text-blue-700 hover:bg-blue-100 border border-blue-300 font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2">
+                            <i class="fa-solid fa-envelope-open-text"></i> Envoyer relance
+                        </button>
+                    </div>
+
+                    <div class="flex justify-end pt-4">
+                        <button type="button" id="btn-save" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-colors opacity-50 cursor-not-allowed flex items-center gap-2" disabled>
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Sauvegarder le dossier
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- TAB 3 : FINANCES & SUIVI -->
+        <div id="tab-finances" class="tab-content hidden space-y-6 max-w-6xl mx-auto">
+            <h2 class="text-2xl font-bold text-slate-800 mb-6 border-b pb-2">Suivi Financier</h2>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Formulaire d'ajout -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 sticky top-6">
+                        
+                        <!-- NOUVEAU : Automatisation loyers (Amélioration 9) -->
+                        <button type="button" onclick="autoGenerateLoyer()" class="w-full mb-6 bg-green-100 text-green-700 hover:bg-green-200 font-bold py-3 rounded-lg transition flex justify-center items-center gap-2 border border-green-300 shadow-sm">
+                            <i class="fa-solid fa-bolt"></i> Encaisser le loyer du mois
+                        </button>
+
+                        <h3 class="font-bold text-slate-800 mb-4 border-t pt-4">Saisir une opération manuelle</h3>
+                        <form id="transaction-form" class="space-y-4">
+                            <div>
+                                <label class="block text-sm text-slate-600 mb-1">Type d'opération</label>
+                                <!-- NOUVEAU : Catégories personnalisables (Amélioration 12) -->
+                                <select id="trans_type" required class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 bg-white" onchange="toggleCustomType()">
+                                    <option value="loyer">Loyer perçu (Locataire)</option>
+                                    <option value="charge">Charge récupérable (ex: Eau, TEOM)</option>
+                                    <option value="depense">Dépense proprio (Assurance, frais)</option>
+                                    <option value="travaux">Travaux / Entretien</option>
+                                    <option value="autre">Autre (Personnalisé)...</option>
+                                </select>
+                                <input type="text" id="trans_type_custom" placeholder="Nom de la catégorie..." class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 mt-2 hidden bg-slate-50">
+                            </div>
+                            <div>
+                                <label class="block text-sm text-slate-600 mb-1">Date</label>
+                                <input type="date" id="trans_date" required class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm text-slate-600 mb-1">Montant (€)</label>
+                                <input type="number" id="trans_amount" step="0.01" required class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm text-slate-600 mb-1">Description</label>
+                                <input type="text" id="trans_desc" placeholder="Ex: Loyer de Mars, Fuite robinet..." required class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <button type="submit" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 rounded-lg transition flex justify-center items-center gap-2 shadow-sm">
+                                <i class="fa-solid fa-plus"></i> Ajouter
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Liste des transactions -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-slate-800">Historique complet</h3>
+                            <!-- NOUVEAU : Export Comptable CSV (Amélioration 11) -->
+                            <button onclick="exportCSV()" class="text-sm bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-700 py-1.5 px-3 rounded-lg flex items-center gap-2 transition">
+                                <i class="fa-solid fa-file-csv"></i> Exporter CSV
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto max-h-[600px] overflow-y-auto rounded-lg border border-slate-100">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="sticky top-0 bg-slate-50 shadow-sm z-10">
+                                    <tr class="text-slate-500 text-sm uppercase tracking-wider">
+                                        <th class="p-3">Date</th>
+                                        <th class="p-3">Opération</th>
+                                        <th class="p-3 text-right">Montant</th>
+                                        <th class="p-3 text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="full-transactions-list" class="text-sm divide-y divide-slate-100">
+                                    <!-- Rempli par JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4 : RÉGULARISATION -->
+        <div id="tab-regularisation" class="tab-content hidden space-y-6 max-w-4xl mx-auto">
+            <h2 class="text-2xl font-bold text-slate-800 mb-6 border-b pb-2">Régularisation des Charges</h2>
+            
+            <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+                <p class="text-slate-600 mb-6">Cet outil compare les provisions versées par votre locataire avec les charges réelles (récupérables) que vous avez payées durant l'année.</p>
+                
+                <div class="flex items-center gap-4 mb-8 bg-slate-50 p-4 rounded-lg border border-slate-200">
+                    <label class="font-bold text-slate-700">Calculer pour l'année :</label>
+                    <input type="number" id="reg_year" min="2000" max="2100" class="w-32 p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 text-center font-bold text-lg" value="2023">
+                    <button onclick="calculateRegularization()" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition">Calculer</button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-green-50 p-6 rounded-xl border border-green-200 text-center">
+                        <p class="text-green-700 font-medium mb-2">Provisions perçues (Total)</p>
+                        <h3 class="text-3xl font-bold text-green-800" id="reg_provisions">0,00 €</h3>
+                        <p class="text-xs text-green-600 mt-2">Basé sur les loyers encaissés</p>
+                    </div>
+                    <div class="bg-red-50 p-6 rounded-xl border border-red-200 text-center">
+                        <p class="text-red-700 font-medium mb-2">Charges réelles payées</p>
+                        <h3 class="text-3xl font-bold text-red-800" id="reg_charges">0,00 €</h3>
+                        <p class="text-xs text-red-600 mt-2">Basé sur vos transactions "Charge"</p>
+                    </div>
+                </div>
+
+                <div id="reg_result_box" class="p-6 rounded-xl text-center border-2 border-slate-200 bg-slate-50">
+                    <h3 class="text-xl font-bold text-slate-700 mb-2">Bilan de l'année</h3>
+                    <p class="text-3xl font-black mb-2" id="reg_diff">0,00 €</p>
+                    <p class="text-slate-600 font-medium" id="reg_message">Cliquez sur Calculer pour voir le bilan.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 5 : QUITTANCES (PDF) -->
+        <div id="tab-quittances" class="tab-content hidden space-y-6 max-w-2xl mx-auto">
+            <h2 class="text-2xl font-bold text-slate-800 mb-6 border-b pb-2">Générer des Quittances</h2>
+            
+            <div class="bg-white rounded-xl shadow-sm border border-blue-200 p-8">
+                <div class="flex items-center justify-center mb-6">
+                    <i class="fa-solid fa-file-pdf text-5xl text-red-500"></i>
+                </div>
+                
+                <p class="text-center text-slate-600 mb-8">Générez un PDF officiel contenant les quittances pour la période sélectionnée, pré-rempli avec vos informations et votre signature.</p>
+
+                <div class="space-y-5">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-1">Mois de début</label>
+                            <input type="month" id="date_debut" class="w-full p-3 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 bg-slate-50">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-1">Mois de fin</label>
+                            <input type="month" id="date_fin" class="w-full p-3 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 bg-slate-50">
+                        </div>
+                    </div>
+                    <p class="text-xs text-center text-slate-500 mt-1">Pour un seul mois, mettez la même date.</p>
+
+                    <button type="button" id="btn-generate" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-xl shadow-md transition-colors flex items-center justify-center gap-3 text-lg mt-4 opacity-50 cursor-not-allowed" disabled>
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Créer le document PDF
+                    </button>
+
+                    <!-- NOUVEAU : Bouton Générer + Email -->
+                    <button type="button" id="btn-generate-email" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-xl shadow-md transition-colors flex items-center justify-center gap-3 mt-2 opacity-50 cursor-not-allowed" disabled>
+                        <i class="fa-solid fa-envelope"></i> Générer PDF & Préparer l'Email
+                    </button>
+                    
+                    <div id="loading-spinner" class="hidden text-center text-red-600 font-bold py-4">
+                        <i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Fabrication du PDF en cours...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Conteneur invisible pour construire le HTML du PDF -->
+    <div id="pdf-workspace"></div>
+
+    <script type="module">
+        // Importations Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, addDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // VOS IDENTIFIANTS FIREBASE
+        const firebaseConfig = {
+            apiKey: "AIzaSyAkyn328IQyfZmZq46xGlGz_9TAPUjuQGk",
+            authDomain: "suivie-apartement.firebaseapp.com",
+            projectId: "suivie-apartement",
+            storageBucket: "suivie-apartement.firebasestorage.app",
+            messagingSenderId: "923503403552",
+            appId: "1:923503403552:web:39e3d6f5c1337d6c645245",
+            measurementId: "G-4164TT1V4L"
+        };
+        
+        const appIdentifier = 'app-gestion-locative';
+
+        let app, analytics, auth, db, currentUser;
+        let unsubscribeTransactions = null;
+        let allTransactions = []; 
+        let appSettings = {}; 
+        let gmailToken = null; // Stockage du jeton Google
+
+        // Variables pour les données Profil (Mis à jour avec Caution et Prix Achat)
+        const fields = [
+            'bailleur_nom', 'bailleur_adresse', 'locataire_nom', 'locataire_email',
+            'logement_adresse', 'loyer_base', 'loyer_charges', 'lieu_emission',
+            'caution', 'prix_achat', 'google_client_id'
+        ];
+        let currentSignatureData = '';
+        let financeChartInstance = null; // Pour le graphique
+
+        // Initialisation de l'interface par défaut
+        const now = new Date();
+        const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        document.getElementById('date_debut').value = currentMonth;
+        document.getElementById('date_fin').value = currentMonth;
+        document.getElementById('trans_date').valueAsDate = new Date();
+        document.getElementById('reg_year').value = now.getFullYear();
+
+        // Gestion des Onglets (Tabs)
+        window.switchTab = function(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active', 'bg-blue-600', 'text-white'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.add('text-slate-300'));
+            
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+            const btn = document.getElementById('nav-' + tabId);
+            btn.classList.add('active', 'bg-blue-600', 'text-white');
+            btn.classList.remove('text-slate-300');
+            
+            if(tabId === 'regularisation') calculateRegularization();
+        };
+
+        try {
+            app = initializeApp(firebaseConfig);
+            analytics = getAnalytics(app);
+            auth = getAuth(app);
+            db = getFirestore(app);
+        } catch (error) {
+            console.error("Erreur d'initialisation Firebase:", error);
+            showToast("Erreur de configuration Cloud", true);
+        }
+
+        // Authentification
+        const initAuth = async () => {
+            try {
+                await signInAnonymously(auth);
+            } catch (error) {
+                console.error("Erreur d'authentification:", error);
+                showToast("Erreur de connexion Firebase", true);
+                document.getElementById('connection-status').innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-500"></i> Erreur`;
+            }
+        };
+
+        if (auth) {
+            initAuth();
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    currentUser = user;
+                    document.getElementById('connection-status').innerHTML = `<i class="fa-solid fa-cloud text-green-400"></i> Sauvegarde active`;
+                    enableForm();
+                    await loadDataFromCloud();
+                    setupTransactionsListener();
+                } else {
+                    currentUser = null;
+                    if (unsubscribeTransactions) unsubscribeTransactions();
+                }
+            });
+        }
+
+        function enableForm() {
+            fields.forEach(field => {
+                const el = document.getElementById(field);
+                if(el) {
+                    el.disabled = false;
+                    el.classList.remove('disabled:bg-slate-200');
+                }
+            });
+            document.getElementById('signature_file').disabled = false;
+            
+            document.getElementById('btn-save').disabled = false;
+            document.getElementById('btn-save').classList.remove('opacity-50', 'cursor-not-allowed');
+
+            document.getElementById('btn-generate').disabled = false;
+            document.getElementById('btn-generate').classList.remove('opacity-50', 'cursor-not-allowed');
+
+            document.getElementById('btn-generate-email').disabled = false;
+            document.getElementById('btn-generate-email').classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+
+        // --- GESTION PROFIL (Locataire/Bailleur) ---
+        async function loadDataFromCloud() {
+            if (!currentUser) return;
+            try {
+                const docRef = doc(db, 'artifacts', appIdentifier, 'users', currentUser.uid, 'settings', 'profile');
+                const docSnap = await getDoc(docRef);
+                
+                if (docSnap.exists()) {
+                    appSettings = docSnap.data();
+                    fields.forEach(field => {
+                        if (appSettings[field] !== undefined && document.getElementById(field)) {
+                            document.getElementById(field).value = appSettings[field];
+                        }
+                    });
+
+                    if (appSettings.signature_data) {
+                        currentSignatureData = appSettings.signature_data;
+                        showSignaturePreview(currentSignatureData);
+                    }
+                }
+            } catch (error) {
+                console.error("Erreur de chargement profil:", error);
+                showToast("Erreur chargement profil", true);
+            }
+        }
+
+        async function saveDataToCloud() {
+            if (!currentUser) return;
+            const btnSave = document.getElementById('btn-save');
+            const originalContent = btnSave.innerHTML;
+            btnSave.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Sauvegarde...`;
+            btnSave.disabled = true;
+
+            fields.forEach(field => {
+                if(document.getElementById(field)) {
+                    appSettings[field] = document.getElementById(field).value;
+                }
+            });
+            appSettings.signature_data = currentSignatureData;
+            
+            // Formatage numérique
+            appSettings.loyer_base = parseFloat(appSettings.loyer_base) || 0;
+            appSettings.loyer_charges = parseFloat(appSettings.loyer_charges) || 0;
+            appSettings.caution = parseFloat(appSettings.caution) || 0;
+            appSettings.prix_achat = parseFloat(appSettings.prix_achat) || 0;
+
+            try {
+                const docRef = doc(db, 'artifacts', appIdentifier, 'users', currentUser.uid, 'settings', 'profile');
+                await setDoc(docRef, appSettings);
+                showToast("Dossier sauvegardé !");
+                updateDashboard(); // Met à jour la rentabilité
+            } catch (error) {
+                console.error("Erreur sauvegarde:", error);
+                showToast("Erreur sauvegarde profil", true);
+            } finally {
+                btnSave.innerHTML = originalContent;
+                btnSave.disabled = false;
+            }
+        }
+
+        document.getElementById('btn-save').addEventListener('click', saveDataToCloud);
+
+        // --- GESTION FINANCES (Transactions) ---
+        function setupTransactionsListener() {
+            if (!currentUser) return;
+            const transRef = collection(db, 'artifacts', appIdentifier, 'users', currentUser.uid, 'transactions');
+            
+            unsubscribeTransactions = onSnapshot(transRef, (snapshot) => {
+                allTransactions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                // Tri en mémoire par date décroissante
+                allTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+                
+                updateDashboard();
+                renderTransactionsTable();
+                if(document.getElementById('tab-regularisation').classList.contains('hidden') === false) {
+                    calculateRegularization();
+                }
+            }, (error) => {
+                console.error("Erreur snapshot transactions:", error);
+            });
+        }
+
+        // Catégories personnalisées (Amélioration 12)
+        window.toggleCustomType = function() {
+            const select = document.getElementById('trans_type');
+            const customInput = document.getElementById('trans_type_custom');
+            if(select.value === 'autre') {
+                customInput.classList.remove('hidden');
+                customInput.required = true;
+            } else {
+                customInput.classList.add('hidden');
+                customInput.required = false;
+            }
+        }
+
+        document.getElementById('transaction-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentUser) return;
+
+            let finalType = document.getElementById('trans_type').value;
+            if (finalType === 'autre') {
+                finalType = document.getElementById('trans_type_custom').value || 'Autre';
+            }
+
+            const newTrans = {
+                type: finalType,
+                date: document.getElementById('trans_date').value,
+                amount: parseFloat(document.getElementById('trans_amount').value),
+                desc: document.getElementById('trans_desc').value,
+                timestamp: new Date().toISOString()
+            };
+
+            try {
+                await addDoc(collection(db, 'artifacts', appIdentifier, 'users', currentUser.uid, 'transactions'), newTrans);
+                showToast("Opération ajoutée");
+                e.target.reset();
+                document.getElementById('trans_date').valueAsDate = new Date();
+                toggleCustomType(); // Reset le champ custom
+            } catch (error) {
+                console.error("Erreur ajout transaction:", error);
+                showToast("Erreur d'ajout", true);
+            }
+        });
+
+        window.deleteTransaction = async function(id) {
+            if (!currentUser) return;
+            try {
+                await deleteDoc(doc(db, 'artifacts', appIdentifier, 'users', currentUser.uid, 'transactions', id));
+                showToast("Opération supprimée");
+            } catch (error) {
+                console.error("Erreur suppression:", error);
+                showToast("Erreur suppression", true);
+            }
+        };
+
+        // --- NOUVEAU : Auto-Loyer (Amélioration 9) ---
+        window.autoGenerateLoyer = async function() {
+            if (!currentUser) return;
+            
+            const loyerBase = parseFloat(document.getElementById('loyer_base').value) || 0;
+            const loyerCharges = parseFloat(document.getElementById('loyer_charges').value) || 0;
+            const loyerTotal = loyerBase + loyerCharges;
+            
+            if(loyerTotal === 0) {
+                showToast("Veuillez d'abord configurer le montant du loyer dans 'Bail & Locataire'.", true);
+                return;
+            }
+
+            const date = new Date();
+            const monthName = capitalize(date.toLocaleDateString('fr-FR', { month: 'long' }));
+            const year = date.getFullYear();
+
+            const newTrans = {
+                type: 'loyer',
+                date: date.toISOString().split('T')[0],
+                amount: loyerTotal,
+                desc: `Loyer encaissé - ${monthName} ${year}`,
+                timestamp: new Date().toISOString()
+            };
+
+            try {
+                await addDoc(collection(db, 'artifacts', appIdentifier, 'users', currentUser.uid, 'transactions'), newTrans);
+                showToast("Loyer du mois ajouté !");
+            } catch (error) {
+                console.error("Erreur ajout auto-loyer:", error);
+                showToast("Erreur lors de l'ajout automatique", true);
+            }
+        }
+
+        // --- NOUVEAU : Export CSV (Amélioration 11) ---
+        window.exportCSV = function() {
+            if (allTransactions.length === 0) {
+                showToast("Aucune donnée à exporter.", true);
+                return;
+            }
+
+            let csvContent = "Date;Type d'opération;Description;Montant (€)\n";
+            
+            allTransactions.forEach(t => {
+                const dateFormatee = new Date(t.date).toLocaleDateString('fr-FR');
+                // Protection des guillemets et points virgules dans la description
+                const descFormatee = `"${t.desc.replace(/"/g, '""')}"`;
+                const amountFormate = t.amount.toString().replace('.', ',');
+                
+                csvContent += `${dateFormatee};${t.type};${descFormatee};${amountFormate}\n`;
+            });
+
+            // BOM pour forcer Excel à lire l'UTF-8
+            const bom = "\uFEFF"; 
+            const blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Historique_Immobilier_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // --- AFFICHAGE ET CALCULS ---
+
+        function updateDashboard() {
+            let totalLoyers = 0, totalCharges = 0, totalTravaux = 0, totalDepenses = 0;
+            let depensesAnneeReelles = 0; // Pour renta nette
+            const anneeCourante = new Date().getFullYear().toString();
+            
+            // 1. Statistiques globales
+            allTransactions.forEach(t => {
+                if (t.type === 'loyer') totalLoyers += t.amount;
+                else if (t.type === 'charge') totalCharges += t.amount;
+                else if (t.type === 'travaux') totalTravaux += t.amount;
+                else totalDepenses += t.amount; // Inclut 'depense' et 'autre'
+
+                // 2. Calcul des dépenses de l'année pour la rentabilité nette
+                if (t.date.startsWith(anneeCourante) && t.type !== 'loyer') {
+                    depensesAnneeReelles += t.amount;
+                }
+            });
+
+            const solde = totalLoyers - (totalCharges + totalTravaux + totalDepenses);
+
+            document.getElementById('stat-loyers').innerText = formatMontant(totalLoyers);
+            document.getElementById('stat-charges').innerText = formatMontant(totalCharges);
+            document.getElementById('stat-travaux').innerText = formatMontant(totalTravaux);
+            
+            const elSolde = document.getElementById('stat-solde');
+            elSolde.innerText = formatMontant(solde);
+            elSolde.className = solde >= 0 ? "text-2xl font-bold text-green-600" : "text-2xl font-bold text-red-600";
+
+            // Dashboard table (5 last)
+            const dashList = document.getElementById('dash-transactions-list');
+            dashList.innerHTML = '';
+            const recent = allTransactions.slice(0, 5);
+            
+            if (recent.length === 0) {
+                dashList.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-500">Aucune opération pour le moment.</td></tr>`;
+            } else {
+                recent.forEach(t => dashList.appendChild(createTransactionRow(t, false)));
+            }
+
+            // --- NOUVEAU : Rentabilité (Amélioration 14) ---
+            const prixAchat = parseFloat(document.getElementById('prix_achat')?.value) || 0;
+            const loyerBase = parseFloat(document.getElementById('loyer_base')?.value) || 0;
+            // On ne prend que le loyer de base annuel pour la rentabilité brute
+            const loyerAnnuelAttendu = loyerBase * 12;
+
+            if (prixAchat > 0 && loyerAnnuelAttendu > 0) {
+                const rentaBrute = (loyerAnnuelAttendu / prixAchat) * 100;
+                // Renta nette basée sur loyer attendu moins les dépenses réelles de l'année
+                const loyerTotalAnnuelAttendu = (loyerBase + (parseFloat(document.getElementById('loyer_charges').value) || 0)) * 12;
+                const rentaNette = ((loyerTotalAnnuelAttendu - depensesAnneeReelles) / prixAchat) * 100;
+
+                document.getElementById('stat-renta-brute').innerText = rentaBrute.toFixed(2) + " %";
+                document.getElementById('stat-renta-nette').innerText = rentaNette.toFixed(2) + " %";
+            } else {
+                document.getElementById('stat-renta-brute').innerText = "0.00 %";
+                document.getElementById('stat-renta-nette').innerText = "0.00 %";
+            }
+
+            // --- NOUVEAU : Graphiques (Amélioration 13) ---
+            renderChart(anneeCourante);
+        }
+
+        function renderChart(annee) {
+            const ctx = document.getElementById('financeChart').getContext('2d');
+            if (financeChartInstance) {
+                financeChartInstance.destroy();
+            }
+
+            let monthlyIncome = new Array(12).fill(0);
+            let monthlyExpense = new Array(12).fill(0);
+
+            allTransactions.forEach(t => {
+                if (t.date.startsWith(annee)) {
+                    let monthIdx = parseInt(t.date.split('-')[1]) - 1;
+                    if (t.type === 'loyer') {
+                        monthlyIncome[monthIdx] += t.amount;
+                    } else {
+                        monthlyExpense[monthIdx] += t.amount; // charges, travaux, autres
+                    }
+                }
+            });
+
+            financeChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'],
+                    datasets: [
+                        {
+                            label: 'Revenus (€)',
+                            data: monthlyIncome,
+                            backgroundColor: '#22c55e', // vert
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Dépenses (€)',
+                            data: monthlyExpense,
+                            backgroundColor: '#ef4444', // rouge
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        function renderTransactionsTable() {
+            const list = document.getElementById('full-transactions-list');
+            list.innerHTML = '';
+            if (allTransactions.length === 0) {
+                list.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-500">Aucune opération.</td></tr>`;
+            } else {
+                allTransactions.forEach(t => list.appendChild(createTransactionRow(t, true)));
+            }
+        }
+
+        function createTransactionRow(t, showDelete) {
+            const tr = document.createElement('tr');
+            
+            let typeBadge, amountColor;
+            const sign = (t.type === 'loyer') ? '+' : '-';
+
+            // Catégories de base et catégories personnalisées
+            if (t.type === 'loyer') { 
+                typeBadge = '<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">Loyer</span>'; 
+                amountColor = 'text-green-600 font-bold'; 
+            }
+            else if (t.type === 'charge') { 
+                typeBadge = '<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold">Charge R.</span>'; 
+                amountColor = 'text-red-600'; 
+            }
+            else if (t.type === 'travaux') { 
+                typeBadge = '<span class="bg-orange-100 text-orange-700 px-2 py-1 rounded text-xs font-bold">Travaux</span>'; 
+                amountColor = 'text-orange-600'; 
+            }
+            else if (t.type === 'depense') { 
+                typeBadge = '<span class="bg-slate-200 text-slate-700 px-2 py-1 rounded text-xs font-bold">Dépense</span>'; 
+                amountColor = 'text-slate-600'; 
+            }
+            else { 
+                // C'est une catégorie personnalisée (Amélioration 12)
+                typeBadge = `<span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-xs font-bold uppercase truncate max-w-[120px] inline-block align-bottom" title="${t.type}">${t.type}</span>`; 
+                amountColor = 'text-slate-600'; 
+            }
+
+            const displayDate = new Date(t.date).toLocaleDateString('fr-FR');
+
+            let actionHtml = '';
+            if (showDelete) {
+                actionHtml = `<button onclick="deleteTransaction('${t.id}')" class="text-red-500 hover:text-red-700 p-1"><i class="fa-solid fa-trash"></i></button>`;
+            } else {
+                actionHtml = `<span class="text-slate-300">-</span>`;
+            }
+
+            tr.innerHTML = `
+                <td class="p-3 text-slate-700">${displayDate}</td>
+                <td class="p-3">${typeBadge}</td>
+                <td class="p-3 text-slate-700 font-medium">${t.desc}</td>
+                <td class="p-3 text-right ${amountColor}">${sign} ${formatMontant(t.amount)}</td>
+                <td class="p-3 text-center">${actionHtml}</td>
+            `;
+            return tr;
+        }
+
+        // --- REGULARISATION ---
+        window.calculateRegularization = function() {
+            const yearStr = document.getElementById('reg_year').value;
+            if (!yearStr) return;
+            
+            let base = parseFloat(document.getElementById('loyer_base').value) || 0;
+            let charges = parseFloat(document.getElementById('loyer_charges').value) || 0;
+            let totalAttendu = base + charges;
+            
+            let ratioProvision = totalAttendu > 0 ? (charges / totalAttendu) : 0;
+            let totalLoyerRecu = 0;
+            let totalChargesReelles = 0;
+
+            allTransactions.forEach(t => {
+                if (t.date.startsWith(yearStr)) {
+                    if (t.type === 'loyer') totalLoyerRecu += t.amount;
+                    if (t.type === 'charge') totalChargesReelles += t.amount;
+                }
+            });
+
+            let provisionsVersees = totalLoyerRecu * ratioProvision;
+            let bilan = provisionsVersees - totalChargesReelles;
+
+            document.getElementById('reg_provisions').innerText = formatMontant(provisionsVersees);
+            document.getElementById('reg_charges').innerText = formatMontant(totalChargesReelles);
+            
+            const diffEl = document.getElementById('reg_diff');
+            const msgEl = document.getElementById('reg_message');
+            const box = document.getElementById('reg_result_box');
+
+            diffEl.innerText = formatMontant(Math.abs(bilan));
+
+            if (bilan > 0) {
+                box.className = "p-6 rounded-xl text-center border-2 border-green-300 bg-green-50";
+                diffEl.className = "text-3xl font-black mb-2 text-green-700";
+                msgEl.innerText = "Trop-perçu : vous devez rendre cette somme au locataire.";
+            } else if (bilan < 0) {
+                box.className = "p-6 rounded-xl text-center border-2 border-red-300 bg-red-50";
+                diffEl.className = "text-3xl font-black mb-2 text-red-700";
+                msgEl.innerText = "Déficit : vous pouvez réclamer cette somme au locataire.";
+            } else {
+                box.className = "p-6 rounded-xl text-center border-2 border-slate-200 bg-slate-50";
+                diffEl.className = "text-3xl font-black mb-2 text-slate-700";
+                msgEl.innerText = "Parfait équilibre.";
+            }
+        };
+
+        // --- SIGNATURE ET UTILS ---
+        document.getElementById('signature_file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    currentSignatureData = event.target.result;
+                    showSignaturePreview(currentSignatureData);
+                    showToast("Signature modifiée ! Pensez à sauvegarder.");
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function showSignaturePreview(src) {
+            const img = document.getElementById('signature_preview');
+            const placeholder = document.getElementById('signature_placeholder');
+            img.src = src;
+            img.classList.remove('hidden');
+            placeholder.classList.add('hidden');
+        }
+
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toast-icon');
+            document.getElementById('toast-msg').innerText = message;
+            
+            if (isError) {
+                toast.className = "hidden opacity-0 transition-opacity duration-300 fixed top-6 right-6 px-4 py-3 rounded-lg font-medium text-sm flex items-center gap-2 shadow-lg bg-red-100 text-red-800 border border-red-200 z-50";
+                icon.className = "fa-solid fa-circle-exclamation";
+            } else {
+                toast.className = "hidden opacity-0 transition-opacity duration-300 fixed top-6 right-6 px-4 py-3 rounded-lg font-medium text-sm flex items-center gap-2 shadow-lg bg-green-100 text-green-800 border border-green-200 z-50";
+                icon.className = "fa-solid fa-check-circle";
+            }
+
+            toast.classList.remove('hidden');
+            void toast.offsetWidth; 
+            toast.classList.remove('opacity-0');
+            toast.classList.add('opacity-100');
+            
+            setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0');
+                setTimeout(() => toast.classList.add('hidden'), 300);
+            }, 3000);
+        }
+
+        function formatMontant(montant) {
+            return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(montant);
+        }
+
+        function capitalize(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+
+        // --- GÉNÉRATION DU PDF (Quittances) ---
+        document.getElementById('btn-generate').addEventListener('click', async () => {
+            const data = {
+                bailleur_nom: document.getElementById('bailleur_nom').value,
+                bailleur_adresse: document.getElementById('bailleur_adresse').value.replace(/\n/g, '<br>'),
+                locataire_nom: document.getElementById('locataire_nom').value,
+                logement_adresse: document.getElementById('logement_adresse').value.replace(/\n/g, '<br>'),
+                loyer_base: parseFloat(document.getElementById('loyer_base').value) || 0,
+                loyer_charges: parseFloat(document.getElementById('loyer_charges').value) || 0,
+                lieu_emission: document.getElementById('lieu_emission').value || '...',
+                signature: currentSignatureData
+            };
+            data.total = data.loyer_base + data.loyer_charges;
+
+            const dateDebut = document.getElementById('date_debut').value;
+            const dateFin = document.getElementById('date_fin').value;
+
+            if (!dateDebut || !dateFin) {
+                showToast("Sélectionnez une période valide.", true);
+                return;
+            }
+
+            let start = new Date(dateDebut + "-01");
+            let end = new Date(dateFin + "-01");
+            
+            if (start > end) {
+                showToast("Erreur de dates.", true);
+                return;
+            }
+
+            const btn = document.getElementById('btn-generate');
+            const spinner = document.getElementById('loading-spinner');
+            btn.classList.add('hidden');
+            spinner.classList.remove('hidden');
+
+            const workspace = document.getElementById('pdf-workspace');
+            workspace.innerHTML = ''; 
+            workspace.style.display = 'block'; 
+
+            let currentMonthIterator = new Date(start);
+            let today = new Date();
+            let dateGeneration = today.toLocaleDateString('fr-FR');
+
+            while (currentMonthIterator <= end) {
+                let year = currentMonthIterator.getFullYear();
+                let monthIdx = currentMonthIterator.getMonth();
+                
+                let monthName = capitalize(currentMonthIterator.toLocaleDateString('fr-FR', { month: 'long' }));
+                let firstDay = new Date(year, monthIdx, 1);
+                let lastDay = new Date(year, monthIdx + 1, 0); 
+                let periodStartStr = firstDay.toLocaleDateString('fr-FR');
+                let periodEndStr = lastDay.toLocaleDateString('fr-FR');
+
+                let pageHtml = `
+                    <div class="quittance-page">
+                        <div style="border-bottom: 2px solid #2563eb; padding-bottom: 15px; margin-bottom: 30px;">
+                            <h1 style="font-size: 24px; color: #1e3a8a; margin: 0; text-transform: uppercase; font-weight: bold; text-align: center;">Quittance de Loyer</h1>
+                            <p style="text-align: center; margin-top: 5px; font-size: 16px; color: #4b5563;">Mois de : <strong>${monthName} ${year}</strong></p>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 40px;">
+                            <div style="width: 45%;">
+                                <h3 style="font-size: 14px; color: #6b7280; margin-bottom: 5px; text-transform: uppercase;">Bailleur</h3>
+                                <p style="font-weight: bold; margin: 0;">${data.bailleur_nom}</p>
+                                <p style="margin: 5px 0 0 0; line-height: 1.4;">${data.bailleur_adresse}</p>
+                            </div>
+                            <div style="width: 45%; background-color: #f3f4f6; padding: 15px; border-radius: 8px;">
+                                <h3 style="font-size: 14px; color: #6b7280; margin-bottom: 5px; text-transform: uppercase;">Locataire</h3>
+                                <p style="font-weight: bold; margin: 0;">${data.locataire_nom}</p>
+                                <p style="margin: 5px 0 0 0; line-height: 1.4;">Adresse de location :<br>${data.logement_adresse}</p>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 30px;">
+                            <p style="font-size: 15px; line-height: 1.6; text-align: justify;">
+                                Reçu de <strong>${data.locataire_nom}</strong> la somme de <strong>${formatMontant(data.total)}</strong>, 
+                                au titre du paiement du loyer et des charges du local d'habitation désigné ci-dessus, 
+                                pour la période du <strong>${periodStartStr}</strong> au <strong>${periodEndStr}</strong>.
+                            </p>
+                        </div>
+                        <div style="margin-bottom: 40px;">
+                            <h3 style="font-size: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-bottom: 15px;">Détail du règlement</h3>
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <tr>
+                                    <td style="padding: 8px 0;">Loyer de base</td>
+                                    <td style="padding: 8px 0; text-align: right;">${formatMontant(data.loyer_base)}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;">Provisions pour charges</td>
+                                    <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; text-align: right;">${formatMontant(data.loyer_charges)}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 12px 0; font-weight: bold; font-size: 18px;">Total reçu</td>
+                                    <td style="padding: 12px 0; font-weight: bold; font-size: 18px; text-align: right; color: #2563eb;">${formatMontant(data.total)}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div style="margin-bottom: 40px;">
+                            <p style="font-size: 12px; color: #6b7280; font-style: italic;">
+                                En application de l'article 21 de la loi n° 89-462 du 6 juillet 1989, la présente quittance annule tous les reçus qui auraient pu être donnés pour acompte versé sur le présent terme. <br>
+                                Le paiement de la présente quittance n'emporte pas présomption de paiement des termes antérieurs.<br>
+                                Sous réserve de tous mes droits pour le passé et l'avenir.
+                            </p>
+                        </div>
+                        <div style="display: flex; justify-content: flex-end;">
+                            <div style="text-align: right; width: 300px;">
+                                <p style="margin-bottom: 15px;">Fait à <strong>${data.lieu_emission}</strong>, le <strong>${dateGeneration}</strong></p>
+                                <p style="margin-bottom: 10px;">Le Bailleur,</p>
+                                ${data.signature ? `<img src="${data.signature}" style="max-width: 200px; max-height: 100px; margin-left: auto; display: block;" alt="Signature">` : '<div style="height: 80px; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; color: #999; font-size: 12px;">[Signature manquante]</div>'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                workspace.insertAdjacentHTML('beforeend', pageHtml);
+                currentMonthIterator.setMonth(currentMonthIterator.getMonth() + 1);
+            }
+
+            const opt = {
+                margin:       0,
+                filename:     `Quittances_${dateDebut}_a_${dateFin}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            try {
+                await window.html2pdf().set(opt).from(workspace).save();
+                showToast("PDF généré avec succès !");
+            } catch (error) {
+                console.error(error);
+                showToast("Erreur création PDF.", true);
+            } finally {
+                // Nettoyage après téléchargement local
+                setTimeout(() => {
+                    workspace.style.display = 'none';
+                    workspace.innerHTML = '';
+                    spinner.classList.add('hidden');
+                    btn.classList.remove('hidden');
+                }, 1500); // Délai pour laisser l'API Gmail récupérer le DOM si activé simultanément
+            }
+        });
+
+        // --- GESTION DE L'API GMAIL ---
+        window.authorizeGmail = function(callback) {
+            const clientId = document.getElementById('google_client_id').value;
+            if (!clientId) {
+                showToast("Veuillez renseigner votre ID Client Google au-dessus.", true);
+                return;
+            }
+            
+            try {
+                const client = google.accounts.oauth2.initTokenClient({
+                    client_id: clientId,
+                    scope: 'https://www.googleapis.com/auth/gmail.send',
+                    callback: (tokenResponse) => {
+                        if (tokenResponse && tokenResponse.access_token) {
+                            gmailToken = tokenResponse.access_token;
+                            showToast("Autorisation Gmail réussie !");
+                            if(typeof callback === 'function') callback();
+                        }
+                    },
+                });
+                client.requestAccessToken();
+            } catch (err) {
+                console.error(err);
+                showToast("Erreur d'initialisation Google. Vérifiez l'ID Client.", true);
+            }
+        };
+
+        function utf8ToBase64(str) {
+            return btoa(unescape(encodeURIComponent(str)));
+        }
+
+        async function sendEmailViaGmailAPI(to, subject, body, pdfDataUri) {
+            if (!gmailToken) {
+                showToast("Connexion à Gmail requise.", true);
+                window.authorizeGmail(() => sendEmailViaGmailAPI(to, subject, body, pdfDataUri));
+                return;
+            }
+
+            showToast("Envoi de l'email en cours...");
+            const boundary = "quittance_boundary_" + Date.now().toString(16);
+            
+            let email = `To: ${to}\r\n`;
+            email += `Subject: =?utf-8?B?${utf8ToBase64(subject)}?=\r\n`;
+            email += `MIME-Version: 1.0\r\n`;
+            email += `Content-Type: multipart/mixed; boundary="${boundary}"\r\n\r\n`;
+
+            email += `--${boundary}\r\n`;
+            email += `Content-Type: text/plain; charset="UTF-8"\r\n\r\n`;
+            email += `${body}\r\n\r\n`;
+
+            if (pdfDataUri) {
+                const pdfBase64 = pdfDataUri.split(',')[1];
+                email += `--${boundary}\r\n`;
+                email += `Content-Type: application/pdf; name="quittance.pdf"\r\n`;
+                email += `Content-Disposition: attachment; filename="quittance.pdf"\r\n`;
+                email += `Content-Transfer-Encoding: base64\r\n\r\n`;
+                email += `${pdfBase64}\r\n\r\n`;
+            }
+
+            email += `--${boundary}--\r\n`;
+
+            // Encodage base64url du message complet
+            const encodedEmail = utf8ToBase64(email)
+                .replace(/\+/g, '-')
+                .replace(/\//g, '_')
+                .replace(/=+$/, '');
+
+            try {
+                const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${gmailToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ raw: encodedEmail })
+                });
+
+                if (response.ok) {
+                    showToast("Email envoyé directement avec succès !");
+                } else {
+                    const err = await response.json();
+                    console.error("Erreur API Gmail:", err);
+                    if (err.error && err.error.status === 'UNAUTHENTICATED') {
+                        gmailToken = null; // Token expiré
+                        window.authorizeGmail(() => sendEmailViaGmailAPI(to, subject, body, pdfDataUri));
+                    } else {
+                        showToast("Erreur API : Vérifiez votre configuration Gmail", true);
+                    }
+                }
+            } catch (error) {
+                console.error(error);
+                showToast("Erreur réseau lors de l'envoi de l'email.", true);
+            }
+        }
+
+        // --- NOUVEAU : Préparer l'Email avec le PDF via API ---
+        document.getElementById('btn-generate-email').addEventListener('click', async () => {
+            const email = document.getElementById('locataire_email').value;
+            if (!email) {
+                showToast("Attention: Renseignez l'email du locataire dans l'onglet 'Bail'", true);
+                switchTab('locataire');
+                return;
+            }
+
+            if (!document.getElementById('google_client_id').value) {
+                showToast("L'ID Client Google est manquant pour l'envoi direct.", true);
+                switchTab('locataire');
+                return;
+            }
+
+            const btn = document.getElementById('btn-generate-email');
+            const spinner = document.getElementById('loading-spinner');
+            btn.classList.add('hidden');
+            spinner.classList.remove('hidden');
+
+            try {
+                // Déclencher la génération standard du PDF (télécharge aussi une copie locale)
+                document.getElementById('btn-generate').click(); 
+                
+                // Attendre que le HTML soit généré dans le workspace par l'autre fonction
+                setTimeout(async () => {
+                    const workspace = document.getElementById('pdf-workspace');
+                    const opt = {
+                        margin:       0,
+                        filename:     'quittance.pdf',
+                        image:        { type: 'jpeg', quality: 0.98 },
+                        html2canvas:  { scale: 2, useCORS: true },
+                        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                    };
+                    
+                    try {
+                        // Récupère les données du PDF sous forme de chaîne base64 (Data URI)
+                        const pdfDataUri = await window.html2pdf().set(opt).from(workspace).outputPdf('datauristring');
+                        
+                        const bailleur = document.getElementById('bailleur_nom').value || 'Le Bailleur';
+                        const subject = `Votre quittance de loyer`;
+                        const body = `Bonjour,\n\nVeuillez trouver en pièce jointe votre quittance de loyer.\n\nCordialement,\n${bailleur}`;
+
+                        await sendEmailViaGmailAPI(email, subject, body, pdfDataUri);
+                    } catch(err) {
+                        console.error(err);
+                        showToast("Erreur lors de la préparation de la pièce jointe.", true);
+                    } finally {
+                        spinner.classList.add('hidden');
+                        btn.classList.remove('hidden');
+                    }
+                }, 1000); 
+            } catch (error) {
+                spinner.classList.add('hidden');
+                btn.classList.remove('hidden');
+            }
+        });
+
+        // --- NOUVEAU : Email de relance API ---
+        window.sendRelanceEmail = function() {
+            const email = document.getElementById('locataire_email').value;
+            const locataire = document.getElementById('locataire_nom').value || 'Locataire';
+            const bailleur = document.getElementById('bailleur_nom').value || 'Le Bailleur';
+            
+            const base = parseFloat(document.getElementById('loyer_base').value) || 0;
+            const charges = parseFloat(document.getElementById('loyer_charges').value) || 0;
+            const total = base + charges;
+
+            if (!email) {
+                showToast("Veuillez renseigner l'email du locataire au-dessus.", true);
+                return;
+            }
+
+            const subject = `Relance : Retard de paiement de loyer`;
+            const body = `Bonjour ${locataire},\n\nSauf erreur ou omission de ma part, je n'ai pas encore reçu le paiement de votre loyer d'un montant de ${total} € pour le mois en cours.\n\nJe vous remercie de bien vouloir procéder au règlement dans les plus brefs délais.\n\nSi vous avez déjà effectué le paiement entre-temps, veuillez ne pas tenir compte de ce message.\n\nCordialement,\n${bailleur}`;
+
+            // Appel de l'API Gmail directement sans PDF
+            sendEmailViaGmailAPI(email, subject, body, null);
+        };
+    </script>
+</body>
+</html>
