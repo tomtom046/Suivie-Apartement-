@@ -199,34 +199,44 @@
                 
                 <form id="settings-form" class="space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        
+                        <!-- Bailleur -->
                         <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
                             <h3 class="font-bold text-slate-700 mb-3"><i class="fa-solid fa-user-tie mr-2"></i>Le Bailleur (Vous)</h3>
                             <input type="text" id="bailleur_nom" placeholder="Nom et Prénom" class="w-full p-2 border border-slate-300 rounded-md mb-3 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-slate-200" disabled>
                             <textarea id="bailleur_adresse" placeholder="Votre adresse complète" class="w-full p-2 border border-slate-300 rounded-md h-20 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-slate-200" disabled></textarea>
-                            <div class="mt-3">
-                                <label class="block text-sm font-medium text-slate-600 mb-1">Prix d'achat du bien (€)</label>
-                                <input type="number" id="prix_achat" step="0.01" placeholder="Ex: 150000" class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 disabled:bg-slate-200" disabled>
+                            
+                            <!-- MISE EN VALEUR : Prix d'achat -->
+                            <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                <label class="block text-sm font-bold text-blue-800 mb-1"><i class="fa-solid fa-tag"></i> Prix d'achat du bien (€)</label>
+                                <input type="number" id="prix_achat" step="0.01" placeholder="Ex: 150000" class="w-full p-2 border border-blue-300 rounded-md focus:ring-2 focus:ring-blue-500 disabled:bg-slate-200" disabled>
                             </div>
-                            <!-- NOUVEAU : Crédit Immo (Amélioration 12) -->
-                            <div class="mt-3">
-                                <label class="block text-sm font-medium text-slate-600 mb-1">Mensualité de crédit immobilier (€)</label>
-                                <input type="number" id="credit_mensualite" step="0.01" placeholder="Ex: 650" class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 disabled:bg-slate-200" disabled>
+
+                            <!-- MISE EN VALEUR : Crédit Immo -->
+                            <div class="mt-3 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                                <label class="block text-sm font-bold text-purple-800 mb-1"><i class="fa-solid fa-building-columns"></i> Mensualité crédit immobilier (€)</label>
+                                <input type="number" id="credit_mensualite" step="0.01" placeholder="Ex: 650" class="w-full p-2 border border-purple-300 rounded-md focus:ring-2 focus:ring-purple-500 disabled:bg-slate-200" disabled>
                             </div>
                         </div>
+
+                        <!-- Locataire -->
                         <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
                             <h3 class="font-bold text-slate-700 mb-3"><i class="fa-solid fa-user mr-2"></i>Le Locataire</h3>
                             <input type="text" id="locataire_nom" placeholder="Nom et Prénom du locataire" class="w-full p-2 border border-slate-300 rounded-md mb-3 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-slate-200" disabled>
                             <input type="email" id="locataire_email" placeholder="Adresse Email (ex: jean@mail.com)" class="w-full p-2 border border-slate-300 rounded-md mb-3 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-slate-200" disabled>
                             <textarea id="logement_adresse" placeholder="Adresse du logement loué" class="w-full p-2 border border-slate-300 rounded-md h-20 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-slate-200" disabled></textarea>
-                            <div class="mt-3">
-                                <label class="block text-sm font-medium text-slate-600 mb-1">Dépôt de garantie versé (Caution €)</label>
-                                <input type="number" id="caution" step="0.01" class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 disabled:bg-slate-200" disabled>
+                            
+                            <!-- MISE EN VALEUR : Caution -->
+                            <div class="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                                <label class="block text-sm font-bold text-orange-800 mb-1"><i class="fa-solid fa-lock"></i> Dépôt de garantie versé (Caution €)</label>
+                                <input type="number" id="caution" step="0.01" class="w-full p-2 border border-orange-300 rounded-md focus:ring-2 focus:ring-orange-500 disabled:bg-slate-200" disabled>
                             </div>
                         </div>
+
                     </div>
 
                     <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                        <h3 class="font-bold text-slate-700 mb-3"><i class="fa-solid fa-money-bill-wave mr-2"></i>Conditions Financières</h3>
+                        <h3 class="font-bold text-slate-700 mb-3"><i class="fa-solid fa-money-bill-wave mr-2"></i>Conditions Financières (Base)</h3>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-slate-600 mb-1">Loyer de base (€)</label>
@@ -340,7 +350,7 @@
                             <h3 class="font-bold text-slate-800">Historique complet</h3>
                             
                             <div class="flex gap-2">
-                                <!-- NOUVEAU : Export JSON complet (Amélioration 20) -->
+                                <!-- Export JSON complet (Amélioration 20) -->
                                 <button onclick="exportJSON()" class="text-sm bg-purple-50 border border-purple-200 hover:bg-purple-100 text-purple-700 py-1.5 px-3 rounded-lg flex items-center gap-2 transition" title="Sauvegarde complète de votre base de données">
                                     <i class="fa-solid fa-file-code"></i> Sauvegarde JSON
                                 </button>
@@ -535,20 +545,35 @@
         document.getElementById('trans_date').valueAsDate = new Date();
         document.getElementById('reg_year').value = now.getFullYear();
 
+        // FIX BUG AFFICHAGE : Utilisation correcte du toggling de classe pour Tailwind
         window.switchTab = function(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active', 'bg-blue-600', 'text-white'));
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.add('text-slate-300'));
+            // On cache tout proprement en supprimant les propriétés d'affichage qui pourraient faire conflit
+            document.querySelectorAll('.tab-content').forEach(el => {
+                el.classList.add('hidden');
+                el.classList.remove('flex', 'block');
+            });
             
-            document.getElementById('tab-' + tabId).classList.remove('hidden');
-            document.getElementById('tab-' + tabId).classList.add('flex'); // Pour le calendrier notamment
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('active', 'bg-blue-600', 'text-white');
+                el.classList.add('text-slate-300');
+            });
+            
+            // On affiche uniquement l'onglet ciblé avec son bon type d'affichage
+            const targetTab = document.getElementById('tab-' + tabId);
+            targetTab.classList.remove('hidden');
+            
+            if (tabId === 'calendrier') {
+                targetTab.classList.add('flex'); // Le calendrier a besoin de 'flex'
+            } else {
+                targetTab.classList.add('block'); // Les autres ont besoin de 'block'
+            }
+            
             const btn = document.getElementById('nav-' + tabId);
             btn.classList.add('active', 'bg-blue-600', 'text-white');
             btn.classList.remove('text-slate-300');
             
             if(tabId === 'regularisation') calculateRegularization();
             if(tabId === 'calendrier') {
-                // Délai léger pour permettre au DOM de s'afficher avant de dessiner le calendrier
                 setTimeout(() => {
                     initOrUpdateCalendar();
                 }, 50);
