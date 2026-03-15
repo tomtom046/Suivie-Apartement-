@@ -75,7 +75,7 @@
 
         <!-- TAB 1 : TABLEAU DE BORD -->
         <div id="tab-dashboard" class="tab-content block space-y-6 max-w-6xl mx-auto">
-            <h2 class="text-2xl font-bold text-slate-800 mb-6 border-b pb-2">Vue d'ensemble</h2>
+            <h2 class="text-2xl font-bold text-slate-800 mb-6 border-b pb-2">Vue d'ensemble <span class="text-sm font-normal text-slate-500 ml-2">(à l'instant T)</span></h2>
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-100 flex items-center gap-4">
@@ -136,7 +136,7 @@
             </div>
 
             <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 mt-6">
-                <h3 class="text-lg font-semibold mb-4 text-slate-800">Dernières opérations</h3>
+                <h3 class="text-lg font-semibold mb-4 text-slate-800">Dernières opérations passées</h3>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
@@ -376,7 +376,7 @@
 
         <!-- TAB 4 : RÉGULARISATION -->
         <div id="tab-regularisation" class="tab-content hidden space-y-6 max-w-4xl mx-auto">
-            <h2 class="text-2xl font-bold text-slate-800 mb-6 border-b pb-2">Régularisation des Charges</h2>
+            <h2 class="text-2xl font-bold text-slate-800 mb-6 border-b pb-2">Régularisation des Charges <span class="text-sm font-normal text-slate-500 ml-2">(à l'instant T)</span></h2>
             
             <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
                 <p class="text-slate-600 mb-6">Cet outil compare les provisions versées par votre locataire avec les charges réelles (récupérables) que vous avez payées durant l'année.</p>
@@ -887,7 +887,14 @@
             let depensesAnneeReelles = 0; 
             const anneeCourante = new Date().getFullYear().toString();
             
+            // On calcule la date du jour au format YYYY-MM-DD
+            const d = new Date();
+            const todayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            
             allTransactions.forEach(t => {
+                // FILTRE : On ignore toutes les transactions dans le futur
+                if (t.date > todayStr) return;
+
                 if (t.type === 'loyer') totalLoyers += t.amount;
                 else if (t.type === 'charge') totalCharges += t.amount;
                 else if (t.type === 'travaux') totalTravaux += t.amount;
@@ -907,7 +914,11 @@
 
             const dashList = document.getElementById('dash-transactions-list');
             dashList.innerHTML = '';
-            const recent = allTransactions.slice(0, 5);
+            
+            // On ne garde que les opérations passées ou d'aujourd'hui pour la liste récente
+            const pastTransactions = allTransactions.filter(t => t.date <= todayStr);
+            const recent = pastTransactions.slice(0, 5);
+            
             if (recent.length === 0) dashList.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-500">Aucune opération.</td></tr>`;
             else recent.forEach(t => dashList.appendChild(createTransactionRow(t, false)));
 
@@ -927,16 +938,19 @@
                 document.getElementById('stat-renta-brute').innerText = "0.00 %";
                 document.getElementById('stat-renta-nette').innerText = "0.00 %";
             }
-            renderChart(anneeCourante, mensualiteCredit);
+            renderChart(anneeCourante, mensualiteCredit, todayStr);
         }
 
-        function renderChart(annee, mensualiteCredit) {
+        function renderChart(annee, mensualiteCredit, todayStr) {
             const ctx = document.getElementById('financeChart').getContext('2d');
             if (financeChartInstance) financeChartInstance.destroy();
 
             let monthlyIncome = new Array(12).fill(0), monthlyExpense = new Array(12).fill(0), monthlyCredit = new Array(12).fill(mensualiteCredit);
 
             allTransactions.forEach(t => {
+                // FILTRE : On ignore toutes les transactions dans le futur
+                if (t.date > todayStr) return;
+
                 if (t.date.startsWith(annee)) {
                     let monthIdx = parseInt(t.date.split('-')[1]) - 1;
                     if (t.type === 'loyer') monthlyIncome[monthIdx] += t.amount;
@@ -1049,8 +1063,14 @@
             
             let ratioProvision = totalAttendu > 0 ? (charges / totalAttendu) : 0;
             let totalLoyerRecu = 0, totalChargesReelles = 0;
+            
+            const d = new Date();
+            const todayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
             allTransactions.forEach(t => {
+                // FILTRE : On ignore toutes les transactions dans le futur
+                if (t.date > todayStr) return;
+
                 if (t.date.startsWith(yearStr)) {
                     if (t.type === 'loyer') totalLoyerRecu += t.amount;
                     if (t.type === 'charge') totalChargesReelles += t.amount;
