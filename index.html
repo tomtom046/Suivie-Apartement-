@@ -293,6 +293,22 @@
                                 <label class="block text-sm text-slate-600 mb-1">Montant (€)</label>
                                 <input type="number" id="trans_amount" step="0.01" required class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500">
                             </div>
+
+                            <!-- NOUVEAU : Assignation -->
+                            <div>
+                                <label class="block text-sm text-slate-600 mb-1">Imputer à (Qui paye ?)</label>
+                                <div class="flex gap-4 p-2 bg-slate-50 border border-slate-200 rounded-md">
+                                    <label class="flex items-center gap-2 cursor-pointer">
+                                        <input type="radio" name="trans_assigned" value="proprietaire" checked class="w-4 h-4 text-blue-600 focus:ring-blue-500">
+                                        <span class="text-sm font-medium text-slate-700">Propriétaire</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 cursor-pointer">
+                                        <input type="radio" name="trans_assigned" value="locataire" class="w-4 h-4 text-blue-600 focus:ring-blue-500">
+                                        <span class="text-sm font-medium text-slate-700">Locataire</span>
+                                    </label>
+                                </div>
+                            </div>
+
                             <div>
                                 <label class="block text-sm text-slate-600 mb-1">Description</label>
                                 <input type="text" id="trans_desc" placeholder="Ex: Loyer de Mars, Fuite robinet..." required class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500">
@@ -572,7 +588,7 @@
             });
         }
 
-        // --- GESTION CATÉGORIES (Améliorations) ---
+        // --- GESTION CATÉGORIES ---
         const defaultCategories = [
             { value: 'loyer', label: 'Loyer perçu (Locataire)' },
             { value: 'charge', label: 'Charge récupérable (ex: Eau, TEOM)' },
@@ -593,7 +609,7 @@
             if (appSettings.custom_categories && Array.isArray(appSettings.custom_categories)) {
                 appSettings.custom_categories.forEach(cat => select.add(new Option(cat, cat)));
             }
-            select.add(new Option('Autre (Nouvelle catégorie)...', 'autre'));
+            select.add(new Option('➕ Créer et sauvegarder une catégorie...', 'autre'));
 
             if(Array.from(select.options).some(opt => opt.value === currentValue)) select.value = currentValue;
             else select.value = 'loyer';
@@ -683,11 +699,17 @@
             document.getElementById('trans_amount').value = t.amount;
             document.getElementById('trans_desc').value = t.desc;
 
+            // Gestion des boutons radio assignés
+            const assignedRadios = document.getElementsByName('trans_assigned');
+            for(let radio of assignedRadios) {
+                radio.checked = (radio.value === (t.assigned || 'proprietaire'));
+            }
+
             const select = document.getElementById('trans_type');
             if(Array.from(select.options).some(opt => opt.value === t.type)) { select.value = t.type; toggleCustomType(); } 
             else { select.value = 'autre'; document.getElementById('trans_type_custom').value = t.type; toggleCustomType(); }
 
-            document.getElementById('recurrence_section').classList.add('hidden'); // Pas de récurrence en édition
+            document.getElementById('recurrence_section').classList.add('hidden'); 
             document.getElementById('form-trans-title').innerText = "Modifier l'opération";
             
             const btnSubmit = document.getElementById('btn-submit-trans');
@@ -704,6 +726,7 @@
             document.getElementById('transaction-form').reset();
             document.getElementById('trans_id').value = '';
             document.getElementById('trans_date').valueAsDate = new Date();
+            document.querySelector('input[name="trans_assigned"][value="proprietaire"]').checked = true; // Remise à zéro assignation
             toggleCustomType();
             
             document.getElementById('recurrence_section').classList.remove('hidden');
@@ -725,6 +748,11 @@
             document.getElementById('trans_amount').value = t.amount;
             document.getElementById('trans_desc').value = t.desc + " (Copie)";
             
+            const assignedRadios = document.getElementsByName('trans_assigned');
+            for(let radio of assignedRadios) {
+                radio.checked = (radio.value === (t.assigned || 'proprietaire'));
+            }
+
             const select = document.getElementById('trans_type');
             if(Array.from(select.options).some(opt => opt.value === t.type)) { select.value = t.type; toggleCustomType(); } 
             else { select.value = 'autre'; document.getElementById('trans_type_custom').value = t.type; toggleCustomType(); }
@@ -740,13 +768,14 @@
             let finalType = document.getElementById('trans_type').value;
             let customTypeVal = document.getElementById('trans_type_custom').value.trim();
             
+            // Logique de création de catégorie sauvegardée de façon permanente
             if (finalType === 'autre') {
                 if (!customTypeVal) { showToast("Veuillez saisir un nom pour la catégorie.", true); return; }
                 finalType = capitalize(customTypeVal);
                 if (!appSettings.custom_categories) appSettings.custom_categories = [];
                 if (!appSettings.custom_categories.includes(finalType)) {
                     appSettings.custom_categories.push(finalType);
-                    await saveDataToCloud(true);
+                    await saveDataToCloud(true); // Sauvegarde silencieuse de la catégorie
                     renderCategories();
                     document.getElementById('trans_type').value = finalType;
                 }
@@ -758,6 +787,7 @@
             const isRecurrent = document.getElementById('trans_recurrence').checked;
             const recurrenceMonths = parseInt(document.getElementById('trans_recurrence_months').value) || 1;
             const transId = document.getElementById('trans_id').value;
+            const assignedTo = document.querySelector('input[name="trans_assigned"]:checked').value;
 
             const btn = document.getElementById('btn-submit-trans');
             const originalBtnHtml = btn.innerHTML;
@@ -767,7 +797,7 @@
             try {
                 if (transId) {
                     await updateDoc(doc(db, 'artifacts', appIdentifier, 'users', currentUser.uid, 'transactions', transId), {
-                        type: finalType, date: startDateStr, amount: amount, desc: desc, timestamp: new Date().toISOString()
+                        type: finalType, date: startDateStr, amount: amount, desc: desc, assigned: assignedTo, timestamp: new Date().toISOString()
                     });
                     showToast("Opération modifiée avec succès.");
                     cancelEditTransaction();
@@ -779,19 +809,20 @@
                     for(let i=0; i<numIterations; i++) {
                         let iterDate = new Date(startDate);
                         iterDate.setMonth(startDate.getMonth() + i);
-                        if (iterDate.getDate() !== startDate.getDate()) iterDate.setDate(0); // Gestion fin de mois (ex 31 janv + 1 mois)
+                        if (iterDate.getDate() !== startDate.getDate()) iterDate.setDate(0); 
 
                         promises.push(addDoc(collection(db, 'artifacts', appIdentifier, 'users', currentUser.uid, 'transactions'), {
                             type: finalType,
                             date: iterDate.toISOString().split('T')[0],
                             amount: amount,
                             desc: desc + (numIterations > 1 ? ` (${i+1}/${numIterations})` : ''),
+                            assigned: assignedTo,
                             timestamp: new Date().toISOString()
                         }));
                     }
                     await Promise.all(promises);
                     showToast(numIterations > 1 ? `${numIterations} opérations générées avec succès !` : "Opération ajoutée.");
-                    cancelEditTransaction(); // Resets form correctly
+                    cancelEditTransaction(); 
                 }
             } catch (error) {
                 showToast("Erreur lors de l'opération", true);
@@ -818,7 +849,7 @@
             const monthName = capitalize(date.toLocaleDateString('fr-FR', { month: 'long' }));
             try {
                 await addDoc(collection(db, 'artifacts', appIdentifier, 'users', currentUser.uid, 'transactions'), {
-                    type: 'loyer', date: date.toISOString().split('T')[0], amount: loyerTotal, desc: `Loyer encaissé - ${monthName} ${date.getFullYear()}`, timestamp: new Date().toISOString()
+                    type: 'loyer', date: date.toISOString().split('T')[0], amount: loyerTotal, desc: `Loyer encaissé - ${monthName} ${date.getFullYear()}`, assigned: 'locataire', timestamp: new Date().toISOString()
                 });
                 showToast("Loyer du mois ajouté !");
             } catch (error) { showToast("Erreur lors de l'ajout automatique", true); }
@@ -827,9 +858,13 @@
         // --- Export CSV & JSON ---
         window.exportCSV = function() {
             if (allTransactions.length === 0) { showToast("Aucune donnée à exporter.", true); return; }
-            let csvContent = "Date;Type d'opération;Description;Montant (€)\n";
+            let csvContent = "Date;Type d'opération;Assigné à;Description;Montant (€)\n";
             allTransactions.forEach(t => {
-                csvContent += `${new Date(t.date).toLocaleDateString('fr-FR')};${t.type};"${t.desc.replace(/"/g, '""')}";${t.amount.toString().replace('.', ',')}\n`;
+                const dateFormatee = new Date(t.date).toLocaleDateString('fr-FR');
+                const descFormatee = `"${t.desc.replace(/"/g, '""')}"`;
+                const amountFormate = t.amount.toString().replace('.', ',');
+                const assignedFormate = t.assigned === 'locataire' ? 'Locataire' : 'Propriétaire';
+                csvContent += `${dateFormatee};${t.type};${assignedFormate};${descFormatee};${amountFormate}\n`;
             });
             triggerDownload(new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' }), `Historique_${new Date().toISOString().split('T')[0]}.csv`);
         }
@@ -932,10 +967,10 @@
                 let eventColor = '#64748b'; 
                 if (t.type === 'loyer') eventColor = '#22c55e'; 
                 else if (t.type === 'charge') eventColor = '#ef4444';
-                else if (t.type === 'charge_immo') eventColor = '#d946ef'; // fuchsia
-                else if (t.type === 'taxe_fonciere') eventColor = '#f43f5e'; // rose
-                else if (t.type === 'csg') eventColor = '#ec4899'; // pink
-                else if (t.type === 'travaux') eventColor = '#f97316'; // orange
+                else if (t.type === 'charge_immo') eventColor = '#d946ef'; 
+                else if (t.type === 'taxe_fonciere') eventColor = '#f43f5e'; 
+                else if (t.type === 'csg') eventColor = '#ec4899'; 
+                else if (t.type === 'travaux') eventColor = '#f97316'; 
 
                 return { title: `${t.type === 'loyer' ? '+' : '-'}${t.amount}€ | ${t.desc}`, start: t.date, color: eventColor, allDay: true };
             });
@@ -976,6 +1011,11 @@
             else if (t.type === 'depense') { typeBadge = '<span class="bg-slate-200 text-slate-700 px-2 py-1 rounded text-xs font-bold">Dépense</span>'; amountColor = 'text-slate-600'; }
             else { typeBadge = `<span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-xs font-bold uppercase truncate max-w-[120px] inline-block align-bottom" title="${t.type}">${t.type}</span>`; amountColor = 'text-slate-600'; }
 
+            // Badge d'assignation
+            const assigneeBadge = (t.assigned === 'locataire') 
+                ? `<span class="mt-1 inline-block text-[10px] bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded uppercase tracking-wider border border-blue-200"><i class="fa-solid fa-user"></i> Locataire</span>`
+                : `<span class="mt-1 inline-block text-[10px] bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded uppercase tracking-wider border border-purple-200"><i class="fa-solid fa-user-tie"></i> Propriétaire</span>`;
+
             const displayDate = new Date(t.date).toLocaleDateString('fr-FR');
             
             let actionHtml = '<span class="text-slate-300">-</span>';
@@ -991,7 +1031,7 @@
             tr.innerHTML = `
                 <td class="p-3 text-slate-700">${displayDate}</td>
                 <td class="p-3">${typeBadge}</td>
-                <td class="p-3 text-slate-700 font-medium">${t.desc}</td>
+                <td class="p-3 text-slate-700 font-medium leading-tight">${t.desc}<br>${assigneeBadge}</td>
                 <td class="p-3 text-right ${amountColor}">${sign} ${formatMontant(t.amount)}</td>
                 ${isFullTable ? `<td class="p-3 text-center">${actionHtml}</td>` : ''}
             `;
