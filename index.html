@@ -102,7 +102,7 @@
                 <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-100 flex items-center gap-4">
                     <div class="bg-blue-100 text-blue-600 p-4 rounded-lg"><i class="fa-solid fa-sack-dollar text-xl"></i></div>
                     <div>
-                        <p class="text-sm text-slate-500 font-medium">Bénéfice net (Hors crédit)</p>
+                        <p class="text-sm text-slate-500 font-medium">Bénéfice net</p>
                         <h3 class="text-2xl font-bold text-slate-800" id="stat-solde">0,00 €</h3>
                     </div>
                 </div>
@@ -891,9 +891,15 @@
             const d = new Date();
             const todayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
             
+            let minDate = todayStr;
+            let hasPastTransactions = false;
+
             allTransactions.forEach(t => {
                 // FILTRE : On ignore toutes les transactions dans le futur
                 if (t.date > todayStr) return;
+
+                hasPastTransactions = true;
+                if (t.date < minDate) minDate = t.date;
 
                 if (t.type === 'loyer') totalLoyers += t.amount;
                 else if (t.type === 'charge') totalCharges += t.amount;
@@ -903,7 +909,20 @@
                 if (t.date.startsWith(anneeCourante) && t.type !== 'loyer') depensesAnneeReelles += t.amount;
             });
 
-            const solde = totalLoyers - (totalCharges + totalTravaux + totalDepenses);
+            const mensualiteCredit = parseFloat(document.getElementById('credit_mensualite')?.value) || 0;
+            
+            // Calcul du nombre de mois écoulés depuis la première transaction pour déduire le crédit global passé
+            let monthsPassed = 0;
+            if (hasPastTransactions) {
+                const dMin = new Date(minDate);
+                const dToday = new Date();
+                monthsPassed = (dToday.getFullYear() - dMin.getFullYear()) * 12 + (dToday.getMonth() - dMin.getMonth()) + 1;
+            }
+            const totalCreditHistorique = monthsPassed * mensualiteCredit;
+
+            // Déduction du crédit dans le solde global
+            const solde = totalLoyers - (totalCharges + totalTravaux + totalDepenses + totalCreditHistorique);
+            
             document.getElementById('stat-loyers').innerText = formatMontant(totalLoyers);
             document.getElementById('stat-charges').innerText = formatMontant(totalCharges);
             document.getElementById('stat-travaux').innerText = formatMontant(totalTravaux);
@@ -924,7 +943,6 @@
 
             const prixAchat = parseFloat(document.getElementById('prix_achat')?.value) || 0;
             const loyerTotalMensuelAttendu = (parseFloat(document.getElementById('loyer_base')?.value) || 0) + (parseFloat(document.getElementById('loyer_charges')?.value) || 0);
-            const mensualiteCredit = parseFloat(document.getElementById('credit_mensualite')?.value) || 0;
             
             const cashflow = loyerTotalMensuelAttendu - mensualiteCredit;
             const elCash = document.getElementById('stat-cashflow');
@@ -932,8 +950,10 @@
             elCash.className = cashflow >= 0 ? "text-2xl font-bold text-purple-900" : "text-2xl font-bold text-red-600";
 
             if (prixAchat > 0 && loyerTotalMensuelAttendu > 0) {
+                const creditAnnuel = mensualiteCredit * 12;
                 document.getElementById('stat-renta-brute').innerText = (((loyerTotalMensuelAttendu * 12) / prixAchat) * 100).toFixed(2) + " %";
-                document.getElementById('stat-renta-nette').innerText = ((((loyerTotalMensuelAttendu * 12) - depensesAnneeReelles) / prixAchat) * 100).toFixed(2) + " %";
+                // La rentabilité nette déduit désormais le crédit immobilier annuel
+                document.getElementById('stat-renta-nette').innerText = ((((loyerTotalMensuelAttendu * 12) - depensesAnneeReelles - creditAnnuel) / prixAchat) * 100).toFixed(2) + " %";
             } else {
                 document.getElementById('stat-renta-brute').innerText = "0.00 %";
                 document.getElementById('stat-renta-nette').innerText = "0.00 %";
