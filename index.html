@@ -45,12 +45,12 @@
 </head>
 <body class="bg-gray-100 font-sans text-gray-800 h-screen overflow-hidden flex flex-col md:flex-row">
 
-    <!-- Toast Notification (Fixé en haut à droite) -->
+    <!-- Toast Notification -->
     <div id="toast" class="hidden opacity-0 transition-opacity duration-300 fixed top-6 right-6 px-4 py-3 rounded-lg font-medium text-sm flex items-center gap-2 shadow-lg z-50">
         <i id="toast-icon" class="fa-solid fa-check-circle"></i> <span id="toast-msg">Action réussie !</span>
     </div>
 
-    <!-- Menu Latéral (Sidebar) -->
+    <!-- Menu Latéral -->
     <aside class="w-full md:w-64 bg-slate-800 text-white flex flex-col shadow-xl z-20 flex-shrink-0">
         <div class="p-6 flex items-center gap-3 border-b border-slate-700">
             <i class="fa-solid fa-building-user text-2xl text-blue-400"></i>
@@ -119,7 +119,6 @@
                 </div>
             </div>
 
-            <!-- NOUVEAU : Graphiques (Amélioration 13) & Rentabilité (Amélioration 14) -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
                 <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-100 p-6">
                     <h3 class="text-lg font-semibold mb-4 text-slate-800">Bilan Annuel (Revenus vs Dépenses)</h3>
@@ -174,30 +173,21 @@
                 </h2>
                 
                 <form id="settings-form" class="space-y-6">
-                    <!-- Bailleur -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
                             <h3 class="font-bold text-slate-700 mb-3"><i class="fa-solid fa-user-tie mr-2"></i>Le Bailleur (Vous)</h3>
                             <input type="text" id="bailleur_nom" placeholder="Nom et Prénom" class="w-full p-2 border border-slate-300 rounded-md mb-3 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-slate-200" disabled>
                             <textarea id="bailleur_adresse" placeholder="Votre adresse complète" class="w-full p-2 border border-slate-300 rounded-md h-20 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-slate-200" disabled></textarea>
-                            
-                            <!-- NOUVEAU : Prix d'achat pour rentabilité (Amélioration 14) -->
                             <div class="mt-3">
                                 <label class="block text-sm font-medium text-slate-600 mb-1">Prix d'achat du bien (€) - Optionnel</label>
                                 <input type="number" id="prix_achat" step="0.01" placeholder="Ex: 150000" class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 disabled:bg-slate-200" disabled>
                             </div>
                         </div>
-                        <!-- Locataire -->
                         <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
                             <h3 class="font-bold text-slate-700 mb-3"><i class="fa-solid fa-user mr-2"></i>Le Locataire</h3>
                             <input type="text" id="locataire_nom" placeholder="Nom et Prénom du locataire" class="w-full p-2 border border-slate-300 rounded-md mb-3 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-slate-200" disabled>
-                            
-                            <!-- NOUVEAU : Email du locataire -->
                             <input type="email" id="locataire_email" placeholder="Adresse Email (ex: jean@mail.com)" class="w-full p-2 border border-slate-300 rounded-md mb-3 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-slate-200" disabled>
-                            
                             <textarea id="logement_adresse" placeholder="Adresse du logement loué" class="w-full p-2 border border-slate-300 rounded-md h-20 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-slate-200" disabled></textarea>
-                            
-                            <!-- NOUVEAU : Dépôt de garantie (Amélioration 5) -->
                             <div class="mt-3">
                                 <label class="block text-sm font-medium text-slate-600 mb-1">Dépôt de garantie versé (Caution €)</label>
                                 <input type="number" id="caution" step="0.01" class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 disabled:bg-slate-200" disabled>
@@ -205,7 +195,6 @@
                         </div>
                     </div>
 
-                    <!-- Location details -->
                     <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
                         <h3 class="font-bold text-slate-700 mb-3"><i class="fa-solid fa-money-bill-wave mr-2"></i>Conditions Financières</h3>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -224,7 +213,6 @@
                         </div>
                     </div>
 
-                    <!-- Signature -->
                     <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
                         <h3 class="font-bold text-slate-700 mb-2 flex items-center gap-2"><i class="fa-solid fa-signature text-blue-500"></i> Votre Signature</h3>
                         <p class="text-sm text-slate-500 mb-3">Importez une image pour signer automatiquement les quittances.</p>
@@ -235,10 +223,16 @@
                         </div>
                     </div>
 
-                    <!-- NOUVEAU : Configuration Gmail API -->
+                    <!-- Configuration Gmail API -->
                     <div class="bg-red-50 p-4 rounded-lg border border-red-200">
                         <h3 class="font-bold text-red-800 mb-2 flex items-center gap-2"><i class="fa-brands fa-google"></i> Envoi direct par Gmail (API)</h3>
-                        <p class="text-sm text-red-600 mb-3">Pour envoyer les emails en arrière-plan, ajoutez votre ID Client Google Cloud. Vous devrez autoriser l'application une fois.</p>
+                        <p class="text-sm text-red-600 mb-2">Pour envoyer les emails en arrière-plan, ajoutez votre ID Client Google Cloud. Vous devrez autoriser l'application une fois.</p>
+                        
+                        <!-- MESSAGE DE DÉPANNAGE POUR L'ERREUR 400 -->
+                        <div class="bg-red-100 p-3 rounded text-xs text-red-800 mb-3 border border-red-300">
+                            <strong><i class="fa-solid fa-triangle-exclamation"></i> Si vous obtenez une Erreur 400 :</strong> Cela signifie que l'URL actuelle de votre navigateur n'est pas autorisée. Vous devez héberger ce fichier sur un vrai serveur (ex: <code>http://localhost:3000</code> ou <code>https://mon-site.com</code>) et ajouter cette URL exacte dans votre console Google Cloud (rubrique "Origines JavaScript autorisées").
+                        </div>
+
                         <input type="text" id="google_client_id" placeholder="Votre ID Client (ex: 12345-abcde.apps.googleusercontent.com)" class="w-full p-2 border border-red-300 rounded-md mb-3 focus:ring-2 focus:ring-red-500 focus:outline-none disabled:bg-red-100" disabled>
                         <button type="button" onclick="authorizeGmail()" class="bg-white text-red-700 hover:bg-red-100 border border-red-300 font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2 text-sm shadow-sm">
                             <i class="fa-solid fa-link"></i> Connecter mon compte Gmail
@@ -249,7 +243,7 @@
                     <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
                         <div>
                             <h3 class="font-bold text-blue-800 mb-1"><i class="fa-solid fa-paper-plane mr-2"></i>Communication</h3>
-                            <p class="text-sm text-blue-600">Envoi direct en arrière-plan</p>
+                            <p class="text-sm text-blue-600">Envoi direct en arrière-plan via Gmail</p>
                         </div>
                         <button type="button" onclick="sendRelanceEmail()" class="bg-white text-blue-700 hover:bg-blue-100 border border-blue-300 font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2">
                             <i class="fa-solid fa-envelope-open-text"></i> Envoyer relance
@@ -274,7 +268,6 @@
                 <div class="lg:col-span-1">
                     <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 sticky top-6">
                         
-                        <!-- NOUVEAU : Automatisation loyers (Amélioration 9) -->
                         <button type="button" onclick="autoGenerateLoyer()" class="w-full mb-6 bg-green-100 text-green-700 hover:bg-green-200 font-bold py-3 rounded-lg transition flex justify-center items-center gap-2 border border-green-300 shadow-sm">
                             <i class="fa-solid fa-bolt"></i> Encaisser le loyer du mois
                         </button>
@@ -283,7 +276,6 @@
                         <form id="transaction-form" class="space-y-4">
                             <div>
                                 <label class="block text-sm text-slate-600 mb-1">Type d'opération</label>
-                                <!-- NOUVEAU : Catégories personnalisables (Amélioration 12) -->
                                 <select id="trans_type" required class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 bg-white" onchange="toggleCustomType()">
                                     <option value="loyer">Loyer perçu (Locataire)</option>
                                     <option value="charge">Charge récupérable (ex: Eau, TEOM)</option>
@@ -317,7 +309,6 @@
                     <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="font-bold text-slate-800">Historique complet</h3>
-                            <!-- NOUVEAU : Export Comptable CSV (Amélioration 11) -->
                             <button onclick="exportCSV()" class="text-sm bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-700 py-1.5 px-3 rounded-lg flex items-center gap-2 transition">
                                 <i class="fa-solid fa-file-csv"></i> Exporter CSV
                             </button>
@@ -404,7 +395,6 @@
                         <i class="fa-solid fa-wand-magic-sparkles"></i> Créer le document PDF
                     </button>
 
-                    <!-- NOUVEAU : Bouton Générer + Email -->
                     <button type="button" id="btn-generate-email" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-xl shadow-md transition-colors flex items-center justify-center gap-3 mt-2 opacity-50 cursor-not-allowed" disabled>
                         <i class="fa-solid fa-envelope"></i> Générer PDF & Préparer l'Email
                     </button>
@@ -420,6 +410,28 @@
 
     <!-- Conteneur invisible pour construire le HTML du PDF -->
     <div id="pdf-workspace"></div>
+
+    <!-- NOUVEAU : Modale de confirmation de sécurité pour les emails -->
+    <div id="email-confirm-modal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4 transition-opacity">
+        <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 transform transition-all">
+            <div class="flex items-center gap-3 text-red-600 mb-4 border-b border-slate-100 pb-3">
+                <i class="fa-solid fa-triangle-exclamation text-2xl"></i>
+                <h3 class="text-xl font-bold" id="modal-title">Confirmer l'envoi</h3>
+            </div>
+            <p class="text-slate-700 mb-4 font-medium" id="modal-text">Êtes-vous sûr de vouloir envoyer cet email ?</p>
+            
+            <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 text-sm text-slate-600 mb-6 max-h-48 overflow-y-auto" id="modal-preview">
+                <!-- Aperçu du mail injecté ici -->
+            </div>
+            
+            <div class="flex justify-end gap-3">
+                <button id="modal-cancel" class="px-5 py-2.5 text-slate-600 hover:bg-slate-100 font-medium rounded-lg transition">Annuler</button>
+                <button id="modal-confirm" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-sm flex items-center gap-2 transition">
+                    <i class="fa-solid fa-paper-plane"></i> Oui, envoyer l'email
+                </button>
+            </div>
+        </div>
+    </div>
 
     <script type="module">
         // Importations Firebase
@@ -445,18 +457,41 @@
         let unsubscribeTransactions = null;
         let allTransactions = []; 
         let appSettings = {}; 
-        let gmailToken = null; // Stockage du jeton Google
+        let gmailToken = null; 
 
-        // Variables pour les données Profil (Mis à jour avec Caution et Prix Achat)
         const fields = [
             'bailleur_nom', 'bailleur_adresse', 'locataire_nom', 'locataire_email',
             'logement_adresse', 'loyer_base', 'loyer_charges', 'lieu_emission',
             'caution', 'prix_achat', 'google_client_id'
         ];
         let currentSignatureData = '';
-        let financeChartInstance = null; // Pour le graphique
+        let financeChartInstance = null; 
 
-        // Initialisation de l'interface par défaut
+        // --- NOUVEAU : Logique de la modale de confirmation ---
+        let currentConfirmAction = null;
+
+        window.showConfirmModal = function(title, text, preview, onConfirm) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-text').innerHTML = text;
+            document.getElementById('modal-preview').innerHTML = preview;
+            currentConfirmAction = onConfirm;
+            document.getElementById('email-confirm-modal').classList.remove('hidden');
+        };
+
+        window.closeConfirmModal = function() {
+            document.getElementById('email-confirm-modal').classList.add('hidden');
+            currentConfirmAction = null;
+        };
+
+        document.getElementById('modal-cancel').addEventListener('click', closeConfirmModal);
+        document.getElementById('modal-confirm').addEventListener('click', () => {
+            if (currentConfirmAction) {
+                currentConfirmAction();
+            }
+            closeConfirmModal();
+        });
+
+        // Initialisation de l'interface
         const now = new Date();
         const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
         document.getElementById('date_debut').value = currentMonth;
@@ -464,7 +499,6 @@
         document.getElementById('trans_date').valueAsDate = new Date();
         document.getElementById('reg_year').value = now.getFullYear();
 
-        // Gestion des Onglets (Tabs)
         window.switchTab = function(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active', 'bg-blue-600', 'text-white'));
@@ -488,13 +522,11 @@
             showToast("Erreur de configuration Cloud", true);
         }
 
-        // Authentification
         const initAuth = async () => {
             try {
                 await signInAnonymously(auth);
             } catch (error) {
                 console.error("Erreur d'authentification:", error);
-                showToast("Erreur de connexion Firebase", true);
                 document.getElementById('connection-status').innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-500"></i> Erreur`;
             }
         };
@@ -535,7 +567,6 @@
             document.getElementById('btn-generate-email').classList.remove('opacity-50', 'cursor-not-allowed');
         }
 
-        // --- GESTION PROFIL (Locataire/Bailleur) ---
         async function loadDataFromCloud() {
             if (!currentUser) return;
             try {
@@ -557,7 +588,6 @@
                 }
             } catch (error) {
                 console.error("Erreur de chargement profil:", error);
-                showToast("Erreur chargement profil", true);
             }
         }
 
@@ -575,7 +605,6 @@
             });
             appSettings.signature_data = currentSignatureData;
             
-            // Formatage numérique
             appSettings.loyer_base = parseFloat(appSettings.loyer_base) || 0;
             appSettings.loyer_charges = parseFloat(appSettings.loyer_charges) || 0;
             appSettings.caution = parseFloat(appSettings.caution) || 0;
@@ -585,7 +614,7 @@
                 const docRef = doc(db, 'artifacts', appIdentifier, 'users', currentUser.uid, 'settings', 'profile');
                 await setDoc(docRef, appSettings);
                 showToast("Dossier sauvegardé !");
-                updateDashboard(); // Met à jour la rentabilité
+                updateDashboard();
             } catch (error) {
                 console.error("Erreur sauvegarde:", error);
                 showToast("Erreur sauvegarde profil", true);
@@ -597,14 +626,13 @@
 
         document.getElementById('btn-save').addEventListener('click', saveDataToCloud);
 
-        // --- GESTION FINANCES (Transactions) ---
+        // --- GESTION FINANCES ---
         function setupTransactionsListener() {
             if (!currentUser) return;
             const transRef = collection(db, 'artifacts', appIdentifier, 'users', currentUser.uid, 'transactions');
             
             unsubscribeTransactions = onSnapshot(transRef, (snapshot) => {
                 allTransactions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                // Tri en mémoire par date décroissante
                 allTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
                 
                 updateDashboard();
@@ -617,7 +645,6 @@
             });
         }
 
-        // Catégories personnalisées (Amélioration 12)
         window.toggleCustomType = function() {
             const select = document.getElementById('trans_type');
             const customInput = document.getElementById('trans_type_custom');
@@ -652,7 +679,7 @@
                 showToast("Opération ajoutée");
                 e.target.reset();
                 document.getElementById('trans_date').valueAsDate = new Date();
-                toggleCustomType(); // Reset le champ custom
+                toggleCustomType();
             } catch (error) {
                 console.error("Erreur ajout transaction:", error);
                 showToast("Erreur d'ajout", true);
@@ -670,7 +697,6 @@
             }
         };
 
-        // --- NOUVEAU : Auto-Loyer (Amélioration 9) ---
         window.autoGenerateLoyer = async function() {
             if (!currentUser) return;
             
@@ -704,7 +730,6 @@
             }
         }
 
-        // --- NOUVEAU : Export CSV (Amélioration 11) ---
         window.exportCSV = function() {
             if (allTransactions.length === 0) {
                 showToast("Aucune donnée à exporter.", true);
@@ -712,17 +737,13 @@
             }
 
             let csvContent = "Date;Type d'opération;Description;Montant (€)\n";
-            
             allTransactions.forEach(t => {
                 const dateFormatee = new Date(t.date).toLocaleDateString('fr-FR');
-                // Protection des guillemets et points virgules dans la description
                 const descFormatee = `"${t.desc.replace(/"/g, '""')}"`;
                 const amountFormate = t.amount.toString().replace('.', ',');
-                
                 csvContent += `${dateFormatee};${t.type};${descFormatee};${amountFormate}\n`;
             });
 
-            // BOM pour forcer Excel à lire l'UTF-8
             const bom = "\uFEFF"; 
             const blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
@@ -737,20 +758,17 @@
         }
 
         // --- AFFICHAGE ET CALCULS ---
-
         function updateDashboard() {
             let totalLoyers = 0, totalCharges = 0, totalTravaux = 0, totalDepenses = 0;
-            let depensesAnneeReelles = 0; // Pour renta nette
+            let depensesAnneeReelles = 0; 
             const anneeCourante = new Date().getFullYear().toString();
             
-            // 1. Statistiques globales
             allTransactions.forEach(t => {
                 if (t.type === 'loyer') totalLoyers += t.amount;
                 else if (t.type === 'charge') totalCharges += t.amount;
                 else if (t.type === 'travaux') totalTravaux += t.amount;
-                else totalDepenses += t.amount; // Inclut 'depense' et 'autre'
+                else totalDepenses += t.amount; 
 
-                // 2. Calcul des dépenses de l'année pour la rentabilité nette
                 if (t.date.startsWith(anneeCourante) && t.type !== 'loyer') {
                     depensesAnneeReelles += t.amount;
                 }
@@ -766,7 +784,6 @@
             elSolde.innerText = formatMontant(solde);
             elSolde.className = solde >= 0 ? "text-2xl font-bold text-green-600" : "text-2xl font-bold text-red-600";
 
-            // Dashboard table (5 last)
             const dashList = document.getElementById('dash-transactions-list');
             dashList.innerHTML = '';
             const recent = allTransactions.slice(0, 5);
@@ -777,15 +794,12 @@
                 recent.forEach(t => dashList.appendChild(createTransactionRow(t, false)));
             }
 
-            // --- NOUVEAU : Rentabilité (Amélioration 14) ---
             const prixAchat = parseFloat(document.getElementById('prix_achat')?.value) || 0;
             const loyerBase = parseFloat(document.getElementById('loyer_base')?.value) || 0;
-            // On ne prend que le loyer de base annuel pour la rentabilité brute
             const loyerAnnuelAttendu = loyerBase * 12;
 
             if (prixAchat > 0 && loyerAnnuelAttendu > 0) {
                 const rentaBrute = (loyerAnnuelAttendu / prixAchat) * 100;
-                // Renta nette basée sur loyer attendu moins les dépenses réelles de l'année
                 const loyerTotalAnnuelAttendu = (loyerBase + (parseFloat(document.getElementById('loyer_charges').value) || 0)) * 12;
                 const rentaNette = ((loyerTotalAnnuelAttendu - depensesAnneeReelles) / prixAchat) * 100;
 
@@ -796,7 +810,6 @@
                 document.getElementById('stat-renta-nette').innerText = "0.00 %";
             }
 
-            // --- NOUVEAU : Graphiques (Amélioration 13) ---
             renderChart(anneeCourante);
         }
 
@@ -815,7 +828,7 @@
                     if (t.type === 'loyer') {
                         monthlyIncome[monthIdx] += t.amount;
                     } else {
-                        monthlyExpense[monthIdx] += t.amount; // charges, travaux, autres
+                        monthlyExpense[monthIdx] += t.amount; 
                     }
                 }
             });
@@ -825,29 +838,15 @@
                 data: {
                     labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'],
                     datasets: [
-                        {
-                            label: 'Revenus (€)',
-                            data: monthlyIncome,
-                            backgroundColor: '#22c55e', // vert
-                            borderRadius: 4
-                        },
-                        {
-                            label: 'Dépenses (€)',
-                            data: monthlyExpense,
-                            backgroundColor: '#ef4444', // rouge
-                            borderRadius: 4
-                        }
+                        { label: 'Revenus (€)', data: monthlyIncome, backgroundColor: '#22c55e', borderRadius: 4 },
+                        { label: 'Dépenses (€)', data: monthlyExpense, backgroundColor: '#ef4444', borderRadius: 4 }
                     ]
                 },
                 options: { 
                     responsive: true, 
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'top' }
-                    },
-                    scales: {
-                        y: { beginAtZero: true }
-                    }
+                    plugins: { legend: { position: 'top' } },
+                    scales: { y: { beginAtZero: true } }
                 }
             });
         }
@@ -864,11 +863,9 @@
 
         function createTransactionRow(t, showDelete) {
             const tr = document.createElement('tr');
-            
             let typeBadge, amountColor;
             const sign = (t.type === 'loyer') ? '+' : '-';
 
-            // Catégories de base et catégories personnalisées
             if (t.type === 'loyer') { 
                 typeBadge = '<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">Loyer</span>'; 
                 amountColor = 'text-green-600 font-bold'; 
@@ -886,19 +883,12 @@
                 amountColor = 'text-slate-600'; 
             }
             else { 
-                // C'est une catégorie personnalisée (Amélioration 12)
                 typeBadge = `<span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-xs font-bold uppercase truncate max-w-[120px] inline-block align-bottom" title="${t.type}">${t.type}</span>`; 
                 amountColor = 'text-slate-600'; 
             }
 
             const displayDate = new Date(t.date).toLocaleDateString('fr-FR');
-
-            let actionHtml = '';
-            if (showDelete) {
-                actionHtml = `<button onclick="deleteTransaction('${t.id}')" class="text-red-500 hover:text-red-700 p-1"><i class="fa-solid fa-trash"></i></button>`;
-            } else {
-                actionHtml = `<span class="text-slate-300">-</span>`;
-            }
+            let actionHtml = showDelete ? `<button onclick="deleteTransaction('${t.id}')" class="text-red-500 hover:text-red-700 p-1"><i class="fa-solid fa-trash"></i></button>` : `<span class="text-slate-300">-</span>`;
 
             tr.innerHTML = `
                 <td class="p-3 text-slate-700">${displayDate}</td>
@@ -1001,7 +991,7 @@
                 toast.classList.remove('opacity-100');
                 toast.classList.add('opacity-0');
                 setTimeout(() => toast.classList.add('hidden'), 300);
-            }, 3000);
+            }, 5000);
         }
 
         function formatMontant(montant) {
@@ -1142,13 +1132,12 @@
                 console.error(error);
                 showToast("Erreur création PDF.", true);
             } finally {
-                // Nettoyage après téléchargement local
                 setTimeout(() => {
                     workspace.style.display = 'none';
                     workspace.innerHTML = '';
                     spinner.classList.add('hidden');
                     btn.classList.remove('hidden');
-                }, 1500); // Délai pour laisser l'API Gmail récupérer le DOM si activé simultanément
+                }, 1500);
             }
         });
 
@@ -1169,6 +1158,8 @@
                             gmailToken = tokenResponse.access_token;
                             showToast("Autorisation Gmail réussie !");
                             if(typeof callback === 'function') callback();
+                        } else {
+                            showToast("L'autorisation a échoué ou a été annulée.", true);
                         }
                     },
                 });
@@ -1179,8 +1170,18 @@
             }
         };
 
-        function utf8ToBase64(str) {
-            return btoa(unescape(encodeURIComponent(str)));
+        // Méthode moderne et sécurisée pour l'encodage Base64-UTF8 (évite les erreurs 400 sur le format du payload)
+        function encodeBase64Url(str) {
+            const encoder = new TextEncoder();
+            const bytes = encoder.encode(str);
+            let binString = '';
+            for (let i = 0; i < bytes.byteLength; i++) {
+                binString += String.fromCharCode(bytes[i]);
+            }
+            return btoa(binString)
+                .replace(/\+/g, '-')
+                .replace(/\//g, '_')
+                .replace(/=+$/, '');
         }
 
         async function sendEmailViaGmailAPI(to, subject, body, pdfDataUri) {
@@ -1194,7 +1195,7 @@
             const boundary = "quittance_boundary_" + Date.now().toString(16);
             
             let email = `To: ${to}\r\n`;
-            email += `Subject: =?utf-8?B?${utf8ToBase64(subject)}?=\r\n`;
+            email += `Subject: =?utf-8?B?${encodeBase64Url(subject)}?=\r\n`;
             email += `MIME-Version: 1.0\r\n`;
             email += `Content-Type: multipart/mixed; boundary="${boundary}"\r\n\r\n`;
 
@@ -1213,11 +1214,8 @@
 
             email += `--${boundary}--\r\n`;
 
-            // Encodage base64url du message complet
-            const encodedEmail = utf8ToBase64(email)
-                .replace(/\+/g, '-')
-                .replace(/\//g, '_')
-                .replace(/=+$/, '');
+            // Encodage complet du payload
+            const encodedEmail = encodeBase64Url(email);
 
             try {
                 const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
@@ -1247,7 +1245,7 @@
             }
         }
 
-        // --- NOUVEAU : Préparer l'Email avec le PDF via API ---
+        // --- Préparer l'Email avec le PDF via API ---
         document.getElementById('btn-generate-email').addEventListener('click', async () => {
             const email = document.getElementById('locataire_email').value;
             if (!email) {
@@ -1262,50 +1260,55 @@
                 return;
             }
 
-            const btn = document.getElementById('btn-generate-email');
-            const spinner = document.getElementById('loading-spinner');
-            btn.classList.add('hidden');
-            spinner.classList.remove('hidden');
+            const bailleur = document.getElementById('bailleur_nom').value || 'Le Bailleur';
+            const subject = `Votre quittance de loyer`;
+            const body = `Bonjour,\n\nVeuillez trouver en pièce jointe votre quittance de loyer.\n\nCordialement,\n${bailleur}`;
 
-            try {
-                // Déclencher la génération standard du PDF (télécharge aussi une copie locale)
-                document.getElementById('btn-generate').click(); 
-                
-                // Attendre que le HTML soit généré dans le workspace par l'autre fonction
-                setTimeout(async () => {
-                    const workspace = document.getElementById('pdf-workspace');
-                    const opt = {
-                        margin:       0,
-                        filename:     'quittance.pdf',
-                        image:        { type: 'jpeg', quality: 0.98 },
-                        html2canvas:  { scale: 2, useCORS: true },
-                        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-                    };
-                    
+            // Demander confirmation avant de tout générer et envoyer
+            showConfirmModal(
+                "Envoi automatique de Quittance",
+                `Vous êtes sur le point d'envoyer la quittance au locataire <strong>${email}</strong>.`,
+                `<strong>Sujet :</strong> ${subject}<br><br><strong>Message :</strong><br>${body.replace(/\n/g, '<br>')}<br><br><em><i class="fa-solid fa-paperclip"></i> quittance.pdf sera générée et attachée automatiquement.</em>`,
+                () => {
+                    const btn = document.getElementById('btn-generate-email');
+                    const spinner = document.getElementById('loading-spinner');
+                    btn.classList.add('hidden');
+                    spinner.classList.remove('hidden');
+
                     try {
-                        // Récupère les données du PDF sous forme de chaîne base64 (Data URI)
-                        const pdfDataUri = await window.html2pdf().set(opt).from(workspace).outputPdf('datauristring');
+                        // Déclencher la génération standard du PDF
+                        document.getElementById('btn-generate').click(); 
                         
-                        const bailleur = document.getElementById('bailleur_nom').value || 'Le Bailleur';
-                        const subject = `Votre quittance de loyer`;
-                        const body = `Bonjour,\n\nVeuillez trouver en pièce jointe votre quittance de loyer.\n\nCordialement,\n${bailleur}`;
-
-                        await sendEmailViaGmailAPI(email, subject, body, pdfDataUri);
-                    } catch(err) {
-                        console.error(err);
-                        showToast("Erreur lors de la préparation de la pièce jointe.", true);
-                    } finally {
+                        setTimeout(async () => {
+                            const workspace = document.getElementById('pdf-workspace');
+                            const opt = {
+                                margin:       0,
+                                filename:     'quittance.pdf',
+                                image:        { type: 'jpeg', quality: 0.98 },
+                                html2canvas:  { scale: 2, useCORS: true },
+                                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                            };
+                            
+                            try {
+                                const pdfDataUri = await window.html2pdf().set(opt).from(workspace).outputPdf('datauristring');
+                                await sendEmailViaGmailAPI(email, subject, body, pdfDataUri);
+                            } catch(err) {
+                                console.error(err);
+                                showToast("Erreur lors de la préparation de la pièce jointe.", true);
+                            } finally {
+                                spinner.classList.add('hidden');
+                                btn.classList.remove('hidden');
+                            }
+                        }, 1000); 
+                    } catch (error) {
                         spinner.classList.add('hidden');
                         btn.classList.remove('hidden');
                     }
-                }, 1000); 
-            } catch (error) {
-                spinner.classList.add('hidden');
-                btn.classList.remove('hidden');
-            }
+                }
+            );
         });
 
-        // --- NOUVEAU : Email de relance API ---
+        // --- Email de relance API ---
         window.sendRelanceEmail = function() {
             const email = document.getElementById('locataire_email').value;
             const locataire = document.getElementById('locataire_nom').value || 'Locataire';
@@ -1323,8 +1326,15 @@
             const subject = `Relance : Retard de paiement de loyer`;
             const body = `Bonjour ${locataire},\n\nSauf erreur ou omission de ma part, je n'ai pas encore reçu le paiement de votre loyer d'un montant de ${total} € pour le mois en cours.\n\nJe vous remercie de bien vouloir procéder au règlement dans les plus brefs délais.\n\nSi vous avez déjà effectué le paiement entre-temps, veuillez ne pas tenir compte de ce message.\n\nCordialement,\n${bailleur}`;
 
-            // Appel de l'API Gmail directement sans PDF
-            sendEmailViaGmailAPI(email, subject, body, null);
+            // Demander confirmation avant l'envoi de la relance
+            showConfirmModal(
+                "Avertissement : Envoi de Relance",
+                `Vous allez envoyer un email de relance d'impayé à <strong>${email}</strong>. Relisez l'aperçu ci-dessous :`,
+                `<strong>Sujet :</strong> ${subject}<br><br><strong>Message :</strong><br>${body.replace(/\n/g, '<br>')}`,
+                () => {
+                    sendEmailViaGmailAPI(email, subject, body, null);
+                }
+            );
         };
     </script>
 </body>
